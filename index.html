@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="QuickSpeak">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#07070d">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <title>QuickSpeak AAC</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;900&display=swap');
+
+    :root {
+      --bg: #07070d;
+      --surface: #111119;
+      --card: #18182a;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.12);
+      --accent-glow: rgba(56, 189, 248, 0.3);
+      --green: #34d399;
+      --red: #f87171;
+      --orange: #fb923c;
+      --text: #eef0f6;
+      --text2: #8a8da0;
+      --radius: 22px;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+    body {
+      font-family: 'Nunito', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; opacity: 0.025; pointer-events: none; z-index: 9999;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* ── Shared ── */
+    .view { display:none; flex-direction:column; height:100%; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); }
+    .view.active { display:flex; }
+
+    .header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px 8px; flex-shrink:0; }
+    .logo { display:flex; align-items:center; gap:8px; font-weight:900; font-size:1.05em; letter-spacing:-0.03em; }
+    .logo span { font-size:1.3em; }
+    .header-right { display:flex; align-items:center; gap:10px; }
+    .gear-btn { background:var(--surface); border:1.5px solid #252530; border-radius:12px; padding:7px 10px; color:var(--text2); font-size:1em; cursor:pointer; }
+    .gear-btn:active { background:#1e1e2e; }
+    .ws-badge { display:flex; align-items:center; gap:5px; font-size:0.72em; font-weight:700; color:var(--text2); background:var(--surface); border:1.5px solid #252530; border-radius:10px; padding:5px 10px; }
+    .ws-dot { width:7px; height:7px; border-radius:50%; background:var(--red); transition:all 0.3s; }
+    .ws-dot.on { background:var(--green); box-shadow:0 0 6px var(--green); }
+
+    .crumb { padding:0 20px 6px; font-size:0.78em; color:var(--text2); flex-shrink:0; }
+    .crumb b { color:var(--accent); }
+    .crumb .back { cursor:pointer; opacity:0.7; }
+
+    .scan-bar { height:3px; margin:0 20px; border-radius:2px; background:var(--surface); overflow:hidden; flex-shrink:0; opacity:0; transition:opacity 0.3s; }
+    .scan-bar.on { opacity:1; }
+    .scan-fill { height:100%; width:0; background:linear-gradient(90deg,var(--accent),#818cf8); border-radius:2px; }
+
+    /* ── Dock ── */
+    .dock-grid { flex:1; display:grid; grid-template-columns:repeat(2,1fr); gap:12px; padding:12px 20px; overflow-y:auto; -webkit-overflow-scrolling:touch; align-content:start; }
+    .dock-card { background:linear-gradient(145deg,var(--card),#1e1e38); border-radius:var(--radius); border:2.5px solid transparent; padding:22px 14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; cursor:pointer; transition:all 0.2s; min-height:120px; }
+    .dock-card:active { transform:scale(0.96); }
+    .dock-card .d-ico { font-size:2.5em; line-height:1; }
+    .dock-card .d-lbl { font-size:0.9em; font-weight:900; text-align:center; }
+    .dock-card .d-cnt { font-size:0.68em; color:var(--text2); font-weight:700; }
+    .dock-card.scan-hi { border-color:var(--accent); box-shadow:0 0 30px var(--accent-glow); }
+
+    /* ── Carousel ── */
+    .stage { flex:1; display:flex; align-items:center; justify-content:center; position:relative; padding:8px 24px; overflow:hidden; }
+    .ghost { position:absolute; width:60%; max-width:200px; aspect-ratio:0.85; background:var(--surface); border-radius:var(--radius); opacity:0.2; pointer-events:none; }
+    .ghost-l { left:-8%; }
+    .ghost-r { right:-8%; }
+
+    .card { width:82%; max-width:320px; aspect-ratio:0.92; background:linear-gradient(145deg,var(--card),#1a1a30); border-radius:var(--radius); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; border:2.5px solid #252535; transition:transform .3s cubic-bezier(.22,1,.36,1),border-color .25s,box-shadow .25s; position:relative; z-index:2; cursor:pointer; }
+    .card::after { content:''; position:absolute; inset:-1px; border-radius:var(--radius); opacity:0; background:conic-gradient(from 180deg,var(--accent),transparent,var(--accent)); z-index:-1; transition:opacity .3s; filter:blur(20px); }
+    .card.glow { border-color:var(--accent); }
+    .card.glow::after { opacity:0.4; }
+    .card.scan-hi { border-color:var(--accent); box-shadow:0 0 30px var(--accent-glow); }
+    .card .emoji { font-size:min(20vw,5.5em); line-height:1; transition:transform .35s cubic-bezier(.34,1.56,.64,1); }
+    .card.glow .emoji { transform:scale(1.12); }
+    .card .text { font-size:min(7vw,1.7em); font-weight:900; text-align:center; padding:0 16px; letter-spacing:-0.02em; line-height:1.15; }
+
+    .card.anim-l { animation:goL .28s cubic-bezier(.22,1,.36,1); }
+    .card.anim-r { animation:goR .28s cubic-bezier(.22,1,.36,1); }
+    @keyframes goL { 0%{transform:translateX(70%) scale(.88);opacity:0} 100%{transform:none;opacity:1} }
+    @keyframes goR { 0%{transform:translateX(-70%) scale(.88);opacity:0} 100%{transform:none;opacity:1} }
+
+    .pips { display:flex; justify-content:center; gap:6px; padding:12px 20px 6px; flex-shrink:0; }
+    .pip { height:5px; border-radius:3px; background:#222233; transition:all .3s; width:5px; }
+    .pip.on { background:var(--accent); width:22px; box-shadow:0 0 8px var(--accent-glow); }
+
+    .actions { display:flex; justify-content:center; gap:10px; padding:8px 20px 14px; flex-shrink:0; }
+    .btn { background:var(--surface); border:1.5px solid #2a2a3a; border-radius:16px; padding:13px 22px; font-family:inherit; font-size:.88em; font-weight:700; color:var(--text); cursor:pointer; transition:all .12s; display:flex; align-items:center; gap:7px; }
+    .btn:active { transform:scale(.94); }
+    .btn.big { background:var(--accent); border-color:var(--accent); color:#050510; padding:13px 30px; font-size:.95em; box-shadow:0 4px 20px rgba(56,189,248,.25); }
+
+    /* ── SOS ── */
+    #sosView { background:linear-gradient(180deg,#1a0800,#0d0400); align-items:center; justify-content:center; text-align:center; padding:30px; }
+    .sos-beacon { width:120px; height:120px; border-radius:50%; background:var(--orange); display:flex; align-items:center; justify-content:center; font-size:3.5em; animation:sosPulse 2s ease-in-out infinite; box-shadow:0 0 60px rgba(255,140,0,.4); }
+    @keyframes sosPulse { 0%,100%{transform:scale(1);box-shadow:0 0 40px rgba(255,140,0,.3)} 50%{transform:scale(1.08);box-shadow:0 0 80px rgba(255,140,0,.6)} }
+    .sos-title { font-size:1.8em; font-weight:900; color:var(--orange); margin-top:24px; }
+    .sos-msg { font-size:1.1em; font-weight:700; margin-top:16px; line-height:1.5; background:rgba(255,140,0,.08); border:2px solid rgba(255,140,0,.2); border-radius:16px; padding:16px 20px; }
+    .sos-phone { font-size:1.8em; font-weight:900; color:#fff; margin-top:16px; background:var(--orange); border-radius:16px; padding:14px 28px; text-decoration:none; display:inline-block; box-shadow:0 4px 20px rgba(255,140,0,.3); }
+    .sos-gps { font-size:.75em; color:var(--text2); margin-top:16px; }
+    .sos-cancel { margin-top:24px; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.15); border-radius:14px; padding:12px 24px; color:var(--text); font-family:inherit; font-size:.9em; font-weight:700; cursor:pointer; }
+
+    .sos-charge { position:fixed; inset:0; z-index:300; background:rgba(5,5,15,.95); display:none; align-items:center; justify-content:center; flex-direction:column; text-align:center; }
+    .sos-charge.on { display:flex; }
+    .sos-ring { width:130px; height:130px; border-radius:50%; border:5px solid #222; position:relative; display:flex; align-items:center; justify-content:center; }
+    .sos-ring-fill { position:absolute; inset:-5px; border-radius:50%; border:5px solid transparent; border-top-color:var(--orange); }
+    .sos-ring-fill.spin { animation:sosSpin var(--dur) linear forwards; }
+    @keyframes sosSpin { to{transform:rotate(1080deg);border-top-color:var(--red)} }
+    .sos-ring-ico { font-size:3em; }
+    .sos-charge-txt { margin-top:20px; font-size:1.1em; font-weight:800; color:var(--orange); }
+    .sos-charge-sub { margin-top:8px; font-size:.85em; color:var(--text2); }
+
+    /* ── Settings ── */
+    .overlay { position:fixed; inset:0; z-index:200; background:rgba(5,5,12,.92); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); display:none; flex-direction:column; padding:20px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+    .overlay.open { display:flex; }
+    .overlay h2 { font-size:1.25em; margin-bottom:14px; }
+    .ov-close { position:fixed; top:14px; right:18px; z-index:210; background:var(--surface); border:1.5px solid #333; width:36px; height:36px; border-radius:50%; color:var(--text); font-size:1.1em; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+    .ov-tabs { display:flex; gap:6px; margin-bottom:14px; }
+    .ov-tab { background:none; border:1.5px solid transparent; border-radius:12px; padding:8px 14px; font-family:inherit; font-size:.8em; font-weight:700; color:var(--text2); cursor:pointer; }
+    .ov-tab.on { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+    .tab-pane { display:none; }
+    .tab-pane.on { display:block; }
+
+    .s-box { background:var(--surface); border-radius:14px; padding:14px; margin-bottom:10px; }
+    .s-label { font-size:.88em; font-weight:700; }
+    .s-sub { font-size:.72em; color:var(--text2); margin-top:2px; }
+    .s-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; }
+    .s-row + .s-row { border-top:1px solid #1a1a30; }
+    .tog { width:46px;height:26px;border-radius:13px;background:#2a2a45;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0; }
+    .tog.on { background:var(--accent); }
+    .tog::after { content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s; }
+    .tog.on::after { transform:translateX(20px); }
+    .s-range { -webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:#2a2a45;outline:none;margin-top:6px; }
+    .s-range::-webkit-slider-thumb { -webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);cursor:pointer; }
+    .s-val { font-size:.82em;font-weight:700;color:var(--accent);min-width:36px;text-align:right; }
+    .s-input { background:#0c0c18;border:1.5px solid #252545;border-radius:10px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:.88em;width:100%; }
+    .s-input:focus { outline:none;border-color:var(--accent); }
+
+    .cats { display:flex; gap:7px; padding:6px 20px 10px; overflow-x:auto; flex-shrink:0; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+    .cats::-webkit-scrollbar { display:none; }
+    .pill { background:var(--surface); border:1.5px solid transparent; border-radius:14px; padding:7px 15px; font-family:inherit; font-size:.8em; font-weight:700; color:var(--text2); white-space:nowrap; cursor:pointer; transition:all .2s; }
+    .pill.on { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+
+    .p-item { display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface);border-radius:14px;margin-bottom:7px; }
+    .p-item .p-em { font-size:1.4em; }
+    .p-item .p-tx { flex:1;font-weight:700;font-size:.92em; }
+    .p-item .p-del { background:none;border:none;color:var(--text2);font-size:1.1em;cursor:pointer;padding:4px; }
+    .add-box { margin-top:14px;padding:16px;background:var(--surface);border-radius:18px;display:flex;flex-direction:column;gap:8px; }
+    .add-box input,.add-box select { background:#0d0d18;border:1.5px solid #2a2a3a;border-radius:11px;padding:10px 13px;color:var(--text);font-family:inherit;font-size:.9em; }
+    .add-box input:focus,.add-box select:focus { outline:none;border-color:var(--accent); }
+
+    .scan-badge { position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:50;background:var(--accent);color:#050510;font-size:.68em;font-weight:900;padding:3px 10px;border-radius:7px;display:none;box-shadow:0 2px 10px rgba(56,189,248,.3); }
+    .scan-badge.on { display:block; }
+
+    .update-banner { display:none; position:fixed; bottom:20px; left:20px; right:20px; z-index:500; background:var(--accent); color:#050510; font-family:inherit; font-size:.85em; font-weight:800; padding:12px 18px; border-radius:14px; align-items:center; justify-content:space-between; gap:10px; box-shadow:0 4px 24px rgba(56,189,248,.3); }
+    .update-banner button { background:rgba(0,0,0,.15); border:none; border-radius:10px; padding:8px 16px; font-family:inherit; font-size:.85em; font-weight:800; color:#050510; cursor:pointer; }
+  </style>
+</head>
+<body>
+
+<div class="update-banner" id="updateBanner">
+  <span>Mise à jour disponible</span>
+  <button onclick="location.reload()">Actualiser</button>
+</div>
+<div class="scan-badge" id="scanBadge">▶ SCAN</div>
+<div class="sos-charge" id="sosCharge">
+  <div class="sos-ring"><div class="sos-ring-fill" id="sosRingFill"></div><div class="sos-ring-ico">🆘</div></div>
+  <div class="sos-charge-txt">SOS en cours...</div>
+  <div class="sos-charge-sub">Relâchez pour annuler</div>
+</div>
+
+<!-- DOCK -->
+<div class="view active" id="dockView">
+  <div class="header">
+    <div class="logo"><span>🗣️</span> QuickSpeak</div>
+    <div class="header-right">
+      <button class="gear-btn" onclick="openOv()">⚙️</button>
+      <div class="ws-badge"><span>🔵 BLE</span></div>
+    </div>
+  </div>
+  <div class="crumb"><b>Accueil</b></div>
+  <div class="scan-bar" id="dockBar"><div class="scan-fill" id="dockFill"></div></div>
+  <div class="dock-grid" id="dockGrid"></div>
+</div>
+
+<!-- CAROUSEL -->
+<div class="view" id="carView">
+  <div class="header">
+    <div class="logo"><span>🗣️</span> QuickSpeak</div>
+    <div class="header-right">
+      <button class="gear-btn" onclick="openOv()">⚙️</button>
+      <div class="ws-badge"><span>🔵 BLE</span></div>
+    </div>
+  </div>
+  <div class="crumb"><span class="back" onclick="goHome()">Accueil</span> › <b id="crumbCat"></b></div>
+  <div class="scan-bar" id="carBar"><div class="scan-fill" id="carFill"></div></div>
+  <div class="stage" id="stage">
+    <div class="ghost ghost-l"></div>
+    <div class="card" id="card" onclick="speak()">
+      <div class="emoji" id="emoji">👋</div>
+      <div class="text" id="cardText">Bonjour</div>
+    </div>
+    <div class="ghost ghost-r"></div>
+  </div>
+  <div class="pips" id="pips"></div>
+  <div class="actions">
+    <button class="btn" onclick="goHome()">🏠</button>
+    <button class="btn" onclick="go(-1)">◀</button>
+    <button class="btn big" onclick="speak()">🔊 Parler</button>
+    <button class="btn" onclick="go(1)">▶</button>
+  </div>
+</div>
+
+<!-- SOS -->
+<div class="view" id="sosView">
+  <div class="sos-beacon">🆘</div>
+  <div class="sos-title">BESOIN D'AIDE</div>
+  <div class="sos-msg" id="sosMsg">Bonjour, j'ai besoin d'aide.<br>Merci d'appeler le numéro ci-dessous.</div>
+  <a class="sos-phone" id="sosLink" href="tel:112"><span id="sosNum">112</span></a>
+  <div class="sos-gps" id="sosGps">Recherche GPS...</div>
+  <button class="sos-cancel" onclick="endSOS()">✕ Annuler l'alerte</button>
+</div>
+
+<!-- SETTINGS -->
+<div class="overlay" id="ov">
+  <button class="ov-close" onclick="closeOv()">✕</button>
+  <h2>⚙️ Réglages</h2>
+  <div class="ov-tabs">
+    <button class="ov-tab on" onclick="setTab(0)">📝 Phrases</button>
+    <button class="ov-tab" onclick="setTab(1)">🎛 Scan</button>
+    <button class="ov-tab" onclick="setTab(2)">🆘 SOS</button>
+    <button class="ov-tab" onclick="setTab(3)">🔵 BLE</button>
+  </div>
+  <div class="tab-pane on" id="tp0">
+    <div class="cats" id="ovCats" style="padding-left:0"></div>
+    <div id="phraseList"></div>
+    <div class="add-box">
+      <input id="fIcon" placeholder="Emoji (ex: 😊)" maxlength="4">
+      <input id="fLabel" placeholder="Texte à dire">
+      <select id="fCat"></select>
+      <button class="btn big" onclick="addP()" style="justify-content:center;width:100%">➕ Ajouter</button>
+    </div>
+    <button class="btn" onclick="resetAll()" style="color:var(--red);width:100%;justify-content:center;margin-top:14px">🔄 Réinitialiser</button>
+  </div>
+  <div class="tab-pane" id="tp1">
+    <div class="s-box">
+      <div class="s-row"><div><div class="s-label">Mode scan</div><div class="s-sub">Défilement auto + bouton unique</div></div><div class="tog" id="togScan" onclick="S.scanOn=!S.scanOn;this.classList.toggle('on',S.scanOn);saveS()"></div></div>
+      <div class="s-row"><div style="flex:1"><div class="s-label">Vitesse</div><input type="range" class="s-range" id="rSpeed" min="800" max="5000" step="200" oninput="S.scanSpeed=+this.value;document.getElementById('vSpeed').textContent=(S.scanSpeed/1000).toFixed(1)+'s';saveS()"></div><div class="s-val" id="vSpeed">2.0s</div></div>
+      <div class="s-row"><div style="flex:1"><div class="s-label">Pause après parole</div><input type="range" class="s-range" id="rPause" min="1000" max="8000" step="500" oninput="S.pauseAfter=+this.value;document.getElementById('vPause').textContent=(S.pauseAfter/1000).toFixed(1)+'s';saveS()"></div><div class="s-val" id="vPause">3.0s</div></div>
+    </div>
+  </div>
+  <div class="tab-pane" id="tp2">
+    <div class="s-box">
+      <div style="margin-bottom:8px"><div class="s-label">Nom du contact</div><input class="s-input" id="iSosName" placeholder="Ex: Maman" oninput="S.sosName=this.value;saveS()"></div>
+      <div style="margin-bottom:8px"><div class="s-label">Téléphone</div><input class="s-input" id="iSosPhone" type="tel" placeholder="06 01 02 03 04" oninput="S.sosPhone=this.value;saveS()"></div>
+      <div><div class="s-label">Message passants</div><input class="s-input" id="iSosMsg" placeholder="Bonjour, j'ai besoin d'aide." oninput="S.sosMsg=this.value;saveS()"></div>
+    </div>
+    <div class="s-box">
+      <div class="s-row"><div style="flex:1"><div class="s-label">Durée appui SOS</div><input type="range" class="s-range" id="rSosDur" min="2000" max="8000" step="500" oninput="S.sosDur=+this.value;document.getElementById('vSosDur').textContent=(S.sosDur/1000).toFixed(1)+'s';saveS()"></div><div class="s-val" id="vSosDur">3.0s</div></div>
+      <div class="s-row"><div><div class="s-label">Voix en boucle</div><div class="s-sub">Répète le message</div></div><div class="tog on" id="togSosV" onclick="S.sosVoice=!S.sosVoice;this.classList.toggle('on',S.sosVoice);saveS()"></div></div>
+      <div class="s-row"><div><div class="s-label">SMS + GPS</div><div class="s-sub">SMS auto au contact</div></div><div class="tog on" id="togSosSms" onclick="S.sosSms=!S.sosSms;this.classList.toggle('on',S.sosSms);saveS()"></div></div>
+    </div>
+  </div>
+  <div class="tab-pane" id="tp3">
+    <div class="s-box">
+      <div class="s-label">Contrôle BLE HID</div>
+      <div class="s-sub" style="margin-bottom:8px">L'ESP32 est connecté en Bluetooth comme un clavier.</div>
+      <div class="s-sub">• Appui court → Avancer (Espace)</div>
+      <div class="s-sub">• Appui long → Sélectionner (Entrée)</div>
+      <div class="s-sub">• Appui très long → SOS (Échap)</div>
+    </div>
+    <div class="s-box">
+      <div class="s-label">Pairing Bluetooth</div>
+      <div class="s-sub">Allez dans Réglages → Bluetooth et connectez "QuickSpeak". Le clavier virtuel peut apparaître — c'est normal, les deux fonctionnent en parallèle.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+var DEFAULTS=[
+  {icon:"👋",label:"Bonjour",cat:"Basique"},{icon:"🙏",label:"Merci",cat:"Basique"},{icon:"👍",label:"Oui",cat:"Basique"},{icon:"👎",label:"Non",cat:"Basique"},{icon:"😊",label:"S'il vous plaît",cat:"Basique"},{icon:"👋",label:"Au revoir",cat:"Basique"},{icon:"😔",label:"Pardon",cat:"Basique"},
+  {icon:"💧",label:"J'ai soif",cat:"Besoins"},{icon:"🍽️",label:"J'ai faim",cat:"Besoins"},{icon:"🚻",label:"Toilettes",cat:"Besoins"},{icon:"😴",label:"Je suis fatigué",cat:"Besoins"},{icon:"🥶",label:"J'ai froid",cat:"Besoins"},{icon:"🥵",label:"J'ai chaud",cat:"Besoins"},{icon:"💊",label:"J'ai mal",cat:"Besoins"},
+  {icon:"😄",label:"Je suis content",cat:"Social"},{icon:"😢",label:"Je suis triste",cat:"Social"},{icon:"❤️",label:"Je t'aime",cat:"Social"},{icon:"🤗",label:"Câlin",cat:"Social"},{icon:"😂",label:"C'est drôle",cat:"Social"},{icon:"🤔",label:"Je réfléchis",cat:"Social"},
+  {icon:"🏠",label:"Je veux rentrer",cat:"Déplacement"},{icon:"🛑",label:"Stop",cat:"Déplacement"},{icon:"➡️",label:"On y va",cat:"Déplacement"},{icon:"⏳",label:"Attends",cat:"Déplacement"},{icon:"🔄",label:"Demi-tour",cat:"Déplacement"},
+  {icon:"🆘",label:"Aide !",cat:"Urgence"},{icon:"🏥",label:"Appeler un médecin",cat:"Urgence"},{icon:"📞",label:"Appeler quelqu'un",cat:"Urgence"},{icon:"⚠️",label:"Danger",cat:"Urgence"}
+];
+var CAT_ICONS={"Basique":"💬","Besoins":"🫶","Social":"😊","Déplacement":"🚀","Urgence":"🚨"};
+var phrases,cats,ci=0,idx=0,busy=false,curView='dock',scanTmr=null,scanIdx=0,sosOn=false,sosVTmr=null,ovOpen=false;
+var S={scanOn:false,scanSpeed:2000,pauseAfter:3000,sosName:'',sosPhone:'',sosMsg:'Bonjour, j\'ai besoin d\'aide.\nMerci d\'appeler le numéro ci-dessous.',sosDur:3000,sosVoice:true,sosSms:true};
+
+function cloneArr(a){var r=[];for(var i=0;i<a.length;i++)r.push({icon:a[i].icon,label:a[i].label,cat:a[i].cat});return r;}
+function load(){
+  try{var s=localStorage.getItem('qs_p');phrases=s?JSON.parse(s):cloneArr(DEFAULTS);}catch(e){phrases=cloneArr(DEFAULTS);}
+  try{var s2=localStorage.getItem('qs_s');if(s2){var o=JSON.parse(s2);for(var k in o)S[k]=o[k];}}catch(e){}
+  cats=[];var seen={};for(var i=0;i<phrases.length;i++){if(!seen[phrases[i].cat]){seen[phrases[i].cat]=1;cats.push(phrases[i].cat);}}
+}
+function saveP(){try{localStorage.setItem('qs_p',JSON.stringify(phrases));}catch(e){}}
+function saveS(){try{localStorage.setItem('qs_s',JSON.stringify(S));}catch(e){}}
+function filtered(){var r=[];for(var i=0;i<phrases.length;i++)if(phrases[i].cat===cats[ci])r.push(phrases[i]);return r;}
+
+// ── Views ──
+function showView(name){
+  stopScan();
+  var vv=document.querySelectorAll('.view');for(var i=0;i<vv.length;i++)vv[i].classList.remove('active');
+  document.getElementById(name+'View').classList.add('active');
+  curView=name;
+  if(name==='dock')renderDock();
+  if(name==='car')renderCar();
+  if(S.scanOn&&name!=='sos')startScan();
+}
+function goHome(){ci=0;idx=0;showView('dock');}
+function enterCat(i){ci=i;idx=0;showView('car');}
+
+// ── Dock ──
+function renderDock(){
+  var h='';
+  for(var i=0;i<cats.length;i++){
+    var c=cats[i],cnt=0;for(var j=0;j<phrases.length;j++)if(phrases[j].cat===c)cnt++;
+    var ico=CAT_ICONS[c]||'📁';
+    h+='<div class="dock-card" id="dc'+i+'" onclick="enterCat('+i+')">';
+    h+='<div class="d-ico">'+ico+'</div><div class="d-lbl">'+c+'</div><div class="d-cnt">'+cnt+' phrases</div></div>';
+  }
+  document.getElementById('dockGrid').innerHTML=h;
+}
+
+// ── Carousel ──
+function renderCar(anim){
+  document.getElementById('crumbCat').textContent=cats[ci];
+  var f=filtered(),total=f.length+1,isBack=idx>=f.length;
+  var card=document.getElementById('card');
+  if(isBack){
+    document.getElementById('emoji').textContent='⬆️';
+    document.getElementById('cardText').textContent='Retour accueil';
+    card.onclick=goHome;
+  }else{
+    document.getElementById('emoji').textContent=f[idx].icon;
+    document.getElementById('cardText').textContent=f[idx].label;
+    card.onclick=speak;
+  }
+  if(anim){card.classList.remove('anim-l','anim-r');void card.offsetWidth;card.classList.add(anim);}
+  var max=9,s=Math.max(0,idx-Math.floor(max/2)),e=Math.min(total,s+max);
+  if(e-s<max)s=Math.max(0,e-max);
+  var h='';for(var i=s;i<e;i++)h+='<div class="pip '+(i===idx?'on':'')+'"></div>';
+  document.getElementById('pips').innerHTML=h;
+}
+function go(dir){var f=filtered(),total=f.length+1;idx=(idx+dir+total)%total;renderCar(dir>0?'anim-l':'anim-r');}
+
+// ── Speech ──
+function speak(){
+  var f=filtered();
+  if(idx>=f.length){goHome();return;}
+  if(busy)return;
+  var p=f[idx],card=document.getElementById('card');
+  busy=true;card.classList.add('glow');
+  var u=new SpeechSynthesisUtterance(p.label);
+  u.lang='fr-FR';u.rate=0.88;u.pitch=1.0;
+  var v=speechSynthesis.getVoices(),fr=null;
+  for(var i=0;i<v.length;i++){if(v[i].lang.indexOf('fr')===0){if(v[i].localService){fr=v[i];break;}if(!fr)fr=v[i];}}
+  if(fr)u.voice=fr;
+  u.onend=u.onerror=function(){
+    busy=false;card.classList.remove('glow');
+    if(S.scanOn&&curView==='car'){stopScan();setTimeout(function(){if(S.scanOn&&curView==='car')startScan();},S.pauseAfter);}
+  };
+  speechSynthesis.cancel();speechSynthesis.speak(u);
+  if(S.scanOn)stopScan();
+}
+speechSynthesis.getVoices();
+if(speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=function(){speechSynthesis.getVoices();};
+
+// ── Scan ──
+function startScan(){
+  stopScan();if(!S.scanOn)return;
+  document.getElementById('scanBadge').classList.add('on');
+  var bar=document.getElementById(curView==='dock'?'dockBar':'carBar');
+  var fill=document.getElementById(curView==='dock'?'dockFill':'carFill');
+  bar.classList.add('on');
+  function tick(){
+    fill.style.transition='none';fill.style.width='0%';void fill.offsetWidth;
+    fill.style.transition='width '+S.scanSpeed+'ms linear';fill.style.width='100%';
+    scanTmr=setTimeout(function(){
+      if(curView==='dock'){
+        var cards=document.querySelectorAll('.dock-card');
+        for(var i=0;i<cards.length;i++)cards[i].classList.remove('scan-hi');
+        scanIdx=(scanIdx+1)%cards.length;
+        cards[scanIdx].classList.add('scan-hi');
+      }else if(curView==='car'){go(1);}
+      tick();
+    },S.scanSpeed);
+  }
+  if(curView==='dock'){scanIdx=-1;var dc=document.querySelectorAll('.dock-card');for(var i=0;i<dc.length;i++)dc[i].classList.remove('scan-hi');}
+  tick();
+}
+function stopScan(){
+  clearTimeout(scanTmr);scanTmr=null;
+  var bb=document.querySelectorAll('.scan-bar');for(var i=0;i<bb.length;i++)bb[i].classList.remove('on');
+  var dc=document.querySelectorAll('.dock-card');for(var i=0;i<dc.length;i++)dc[i].classList.remove('scan-hi');
+  if(!S.scanOn)document.getElementById('scanBadge').classList.remove('on');
+}
+function scanSelect(){
+  if(curView==='dock'){
+    // Valider la catégorie surlignée (ou la première si aucune)
+    var i=(scanIdx>=0&&scanIdx<cats.length)?scanIdx:0;
+    enterCat(i);
+  }
+  else if(curView==='car'){
+    // Valider = parler la phrase affichée
+    speak();
+  }
+}
+
+// ── SOS ──
+var sosCharging=false,sosChTmr=null;
+function startSOSCharge(){
+  if(sosOn)return;sosCharging=true;
+  document.getElementById('sosCharge').classList.add('on');
+  var ring=document.getElementById('sosRingFill');
+  ring.classList.remove('spin');ring.style.setProperty('--dur',S.sosDur+'ms');void ring.offsetWidth;ring.classList.add('spin');
+  sosChTmr=setTimeout(function(){document.getElementById('sosCharge').classList.remove('on');document.getElementById('sosRingFill').classList.remove('spin');sosCharging=false;fireSOS();},S.sosDur);
+}
+function cancelSOSCharge(){if(!sosCharging)return;sosCharging=false;clearTimeout(sosChTmr);document.getElementById('sosCharge').classList.remove('on');document.getElementById('sosRingFill').classList.remove('spin');}
+function fireSOS(){
+  sosOn=true;stopScan();
+  var msg=S.sosMsg||'Bonjour, j\'ai besoin d\'aide.';
+  var phone=S.sosPhone||'112';
+  document.getElementById('sosMsg').innerHTML=msg.replace(/\n/g,'<br>');
+  document.getElementById('sosNum').textContent=phone;
+  document.getElementById('sosLink').href='tel:'+phone.replace(/\s/g,'');
+  showView('sos');
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(function(pos){
+      var lat=pos.coords.latitude.toFixed(5),lon=pos.coords.longitude.toFixed(5);
+      document.getElementById('sosGps').innerHTML='📍 '+lat+', '+lon+'<br><a href="https://maps.google.com/?q='+lat+','+lon+'" style="color:var(--orange)" target="_blank">Ouvrir Maps</a>';
+      if(S.sosSms&&S.sosPhone){
+        var body=encodeURIComponent('🆘 ALERTE QuickSpeak'+(S.sosName?' — '+S.sosName:'')+'!\nPosition: https://maps.google.com/?q='+lat+','+lon);
+        var a=document.createElement('a');a.href='sms:'+S.sosPhone.replace(/\s/g,'')+'&body='+body;a.click();
+      }
+    },function(){document.getElementById('sosGps').textContent='📍 GPS indisponible';},{enableHighAccuracy:true,timeout:10000});
+  }
+  if(S.sosVoice)sosVoiceLoop(msg,phone);
+}
+function sosVoiceLoop(msg,phone){
+  if(!sosOn)return;
+  var u=new SpeechSynthesisUtterance(msg.replace(/\n/g,'. ')+'. Appelez le '+phone);
+  u.lang='fr-FR';u.rate=0.8;
+  var v=speechSynthesis.getVoices(),fr=null;
+  for(var i=0;i<v.length;i++){if(v[i].lang.indexOf('fr')===0){if(v[i].localService){fr=v[i];break;}if(!fr)fr=v[i];}}
+  if(fr)u.voice=fr;
+  u.onend=function(){sosVTmr=setTimeout(function(){sosVoiceLoop(msg,phone);},4000);};
+  speechSynthesis.cancel();speechSynthesis.speak(u);
+}
+function endSOS(){sosOn=false;speechSynthesis.cancel();clearTimeout(sosVTmr);showView('dock');}
+
+// ── (WebSocket supprimé — contrôle 100% BLE HID) ──
+
+// ── Settings ──
+function openOv(){stopScan();ovOpen=true;document.getElementById('ov').classList.add('open');renderOv();}
+function closeOv(){ovOpen=false;document.getElementById('ov').classList.remove('open');load();if(curView==='car'){idx=0;showView('car');}else showView('dock');}
+function setTab(n){
+  var tt=document.querySelectorAll('.ov-tab'),pp=document.querySelectorAll('.tab-pane');
+  for(var i=0;i<tt.length;i++){tt[i].classList.remove('on');pp[i].classList.remove('on');}
+  tt[n].classList.add('on');pp[n].classList.add('on');
+  if(n===0)renderEditor();
+}
+function renderOv(){
+  document.getElementById('togScan').classList.toggle('on',S.scanOn);
+  document.getElementById('rSpeed').value=S.scanSpeed;document.getElementById('vSpeed').textContent=(S.scanSpeed/1000).toFixed(1)+'s';
+  document.getElementById('rPause').value=S.pauseAfter;document.getElementById('vPause').textContent=(S.pauseAfter/1000).toFixed(1)+'s';
+  document.getElementById('iSosName').value=S.sosName;document.getElementById('iSosPhone').value=S.sosPhone;document.getElementById('iSosMsg').value=S.sosMsg;
+  document.getElementById('rSosDur').value=S.sosDur;document.getElementById('vSosDur').textContent=(S.sosDur/1000).toFixed(1)+'s';
+  document.getElementById('togSosV').classList.toggle('on',S.sosVoice);
+  document.getElementById('togSosSms').classList.toggle('on',S.sosSms);
+  renderEditor();
+}
+function renderEditor(){
+  var h='';for(var i=0;i<cats.length;i++)h+='<button class="pill '+(i===ci?'on':'')+'" onclick="ci='+i+';renderEditor()">'+cats[i]+'</button>';
+  document.getElementById('ovCats').innerHTML=h;
+  var f=filtered(),h2='';
+  for(var j=0;j<f.length;j++){
+    var gi=-1;for(var k=0;k<phrases.length;k++)if(phrases[k]===f[j]){gi=k;break;}
+    h2+='<div class="p-item"><span class="p-em">'+f[j].icon+'</span><span class="p-tx">'+f[j].label+'</span><button class="p-del" onclick="delP('+gi+')">🗑</button></div>';
+  }
+  document.getElementById('phraseList').innerHTML=h2;
+  var h3='';for(var i=0;i<cats.length;i++)h3+='<option>'+cats[i]+'</option>';
+  h3+='<option value="__new">+ Nouvelle catégorie</option>';
+  document.getElementById('fCat').innerHTML=h3;
+}
+function addP(){
+  var icon=document.getElementById('fIcon').value.trim()||'💬';
+  var label=document.getElementById('fLabel').value.trim();
+  var cat=document.getElementById('fCat').value;
+  if(!label)return;
+  if(cat==='__new'){cat=prompt('Nom:');if(!cat)return;}
+  phrases.push({icon:icon,label:label,cat:cat});saveP();load();
+  document.getElementById('fIcon').value='';document.getElementById('fLabel').value='';
+  renderEditor();
+}
+function delP(i){phrases.splice(i,1);saveP();load();if(idx>=filtered().length)idx=Math.max(0,filtered().length-1);renderEditor();}
+function resetAll(){if(!confirm('Réinitialiser ?'))return;phrases=cloneArr(DEFAULTS);saveP();load();ci=0;idx=0;renderEditor();}
+
+// ── Touch & Keys ──
+var tx=0;
+document.addEventListener('touchstart',function(e){tx=e.touches[0].clientX;},{passive:true});
+document.addEventListener('touchend',function(e){
+  if(curView!=='car'||ovOpen)return;
+  var d=e.changedTouches[0].clientX-tx;
+  if(Math.abs(d)>45)go(d<0?1:-1);
+},{passive:true});
+
+// ── BLE HID : Espace (next), Entrée (select), Échap (SOS) ──
+// L'ESP32 envoie Espace au moment de l'appui (keydown), puis
+// au relâchement : Espace keyup + éventuellement Entrée (long)
+// ou Échap (très long). Un petit délai permet de distinguer
+// un appui court (Espace seul → next) d'un appui long
+// (Espace + Entrée/Échap → select/SOS).
+var bleNextTmr=null;
+var bleSpaceDown=false;
+
+function bleCancelNext(){
+  if(bleNextTmr){clearTimeout(bleNextTmr);bleNextTmr=null;}
+}
+
+function bleDoNext(){
+  bleNextTmr=null;
+  if(ovOpen||sosOn)return;
+  // Appui court = avancer dans le scan ou naviguer
+  if(S.scanOn){
+    // En mode scan : un appui court valide la sélection en surbrillance
+    scanSelect();
+  } else {
+    // Hors scan : avancer manuellement
+    if(curView==='dock'){enterCat(0);}
+    else if(curView==='car'){go(1);}
+  }
+}
+
+document.addEventListener('keydown',function(e){
+  if(ovOpen)return;
+
+  // ── Espace (BLE: appui bouton) ──
+  if(e.key===' '){
+    e.preventDefault();
+    if(bleSpaceDown)return; // éviter les répétitions auto
+    bleSpaceDown=true;
+    bleCancelNext();
+    // Feedback visuel + démarrer animation SOS charge
+    document.body.style.outline='3px solid var(--accent)';
+    if(!sosOn)startSOSCharge();
+    return;
+  }
+
+  // ── Entrée (BLE: appui long → sélection) ──
+  if(e.key==='Enter'){
+    e.preventDefault();
+    bleCancelNext();
+    if(sosOn)return; // on ignore Enter en mode SOS
+    scanSelect();
+    return;
+  }
+
+  // ── Échap (BLE: appui très long → SOS toggle) ──
+  if(e.key==='Escape'){
+    e.preventDefault();
+    bleCancelNext();
+    if(sosOn){endSOS();}else{fireSOS();}
+    return;
+  }
+
+  // ── Flèches (clavier physique pour démo/test) ──
+  if(e.key==='ArrowRight'){if(curView==='car')go(1);}
+  if(e.key==='ArrowLeft'){if(curView==='car')go(-1);}
+  if(e.key==='Backspace'){if(curView==='car')goHome();}
+});
+
+document.addEventListener('keyup',function(e){
+  if(e.key===' '){
+    e.preventDefault();
+    bleSpaceDown=false;
+    // Retirer feedback visuel + annuler animation SOS
+    document.body.style.outline='none';
+    cancelSOSCharge();
+    // Petit délai : si Enter ou Escape arrive dans 150ms,
+    // c'était un appui long/très long. Sinon → appui court (next).
+    bleCancelNext();
+    bleNextTmr=setTimeout(bleDoNext,150);
+  }
+});
+
+// ── Init ──
+load();showView('dock');
+
+// ── PWA : Service Worker ──
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').then(function(reg){
+    console.log('QuickSpeak SW enregistré');
+  }).catch(function(err){
+    console.log('SW erreur:',err);
+  });
+  // Écouter les mises à jour
+  navigator.serviceWorker.addEventListener('message',function(e){
+    if(e.data&&e.data.type==='UPDATE_AVAILABLE'){
+      // Afficher un discret bandeau de mise à jour
+      var banner=document.getElementById('updateBanner');
+      if(banner)banner.style.display='flex';
+    }
+  });
+}
+</script>
+</body>
+</html>
