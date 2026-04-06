@@ -274,22 +274,24 @@
       <div><div class="s-label">Message passants</div><input class="s-input" id="iSosMsg" placeholder="Bonjour, j'ai besoin d'aide." oninput="S.sosMsg=this.value;saveS()"></div>
     </div>
     <div class="s-box">
-      <div class="s-row"><div style="flex:1"><div class="s-label">Durée appui SOS</div><input type="range" class="s-range" id="rSosDur" min="2000" max="8000" step="500" oninput="S.sosDur=+this.value;document.getElementById('vSosDur').textContent=(S.sosDur/1000).toFixed(1)+'s';saveS()"></div><div class="s-val" id="vSosDur">3.0s</div></div>
       <div class="s-row"><div><div class="s-label">Voix en boucle</div><div class="s-sub">Répète le message</div></div><div class="tog on" id="togSosV" onclick="S.sosVoice=!S.sosVoice;this.classList.toggle('on',S.sosVoice);saveS()"></div></div>
       <div class="s-row"><div><div class="s-label">SMS + GPS</div><div class="s-sub">SMS auto au contact</div></div><div class="tog on" id="togSosSms" onclick="S.sosSms=!S.sosSms;this.classList.toggle('on',S.sosSms);saveS()"></div></div>
     </div>
   </div>
   <div class="tab-pane" id="tp3">
     <div class="s-box">
-      <div class="s-label">Contrôle BLE HID</div>
-      <div class="s-sub" style="margin-bottom:8px">L'ESP32 est connecté en Bluetooth comme un clavier.</div>
-      <div class="s-sub">• Appui court → Avancer (Espace)</div>
-      <div class="s-sub">• Appui long → Sélectionner (Entrée)</div>
-      <div class="s-sub">• Appui très long → SOS (Échap)</div>
+      <div class="s-label">Durées d'appui bouton</div>
+      <div class="s-sub" style="margin-bottom:8px">Ajustez la sensibilité selon l'utilisateur</div>
+      <div class="s-row"><div style="flex:1"><div class="s-label">Appui long → Sélection</div><div class="s-sub">Durée pour valider un choix</div><input type="range" class="s-range" id="rLongPress" min="300" max="2000" step="100" oninput="S.longPress=+this.value;document.getElementById('vLongPress').textContent=(S.longPress/1000).toFixed(1)+'s';saveS()"></div><div class="s-val" id="vLongPress">0.8s</div></div>
+      <div class="s-row"><div style="flex:1"><div class="s-label">Appui très long → SOS</div><div class="s-sub">Durée pour déclencher l'alerte</div><input type="range" class="s-range" id="rSosPress" min="1500" max="6000" step="500" oninput="S.sosPress=+this.value;document.getElementById('vSosPress').textContent=(S.sosPress/1000).toFixed(1)+'s';saveS()"></div><div class="s-val" id="vSosPress">3.0s</div></div>
     </div>
     <div class="s-box">
       <div class="s-label">Pairing Bluetooth</div>
       <div class="s-sub">Allez dans Réglages → Bluetooth et connectez "QuickSpeak". Le clavier virtuel peut apparaître — c'est normal, les deux fonctionnent en parallèle.</div>
+    </div>
+    <div class="s-box">
+      <div class="s-label">Fonctionnement</div>
+      <div class="s-sub">Le bouton envoie uniquement "Espace" au téléphone. C'est cette application qui décide quoi faire selon la durée de l'appui.</div>
     </div>
   </div>
 </div>
@@ -304,7 +306,7 @@ var DEFAULTS=[
 ];
 var CAT_ICONS={"Basique":"💬","Besoins":"🫶","Social":"😊","Déplacement":"🚀","Urgence":"🚨"};
 var phrases,cats,ci=0,idx=0,busy=false,curView='dock',scanTmr=null,scanIdx=0,sosOn=false,sosVTmr=null,ovOpen=false;
-var S={scanOn:false,scanSpeed:2000,pauseAfter:3000,sosName:'',sosPhone:'',sosMsg:'Bonjour, j\'ai besoin d\'aide.\nMerci d\'appeler le numéro ci-dessous.',sosDur:3000,sosVoice:true,sosSms:true};
+var S={scanOn:false,scanSpeed:2000,pauseAfter:3000,sosName:'',sosPhone:'',sosMsg:'Bonjour, j\'ai besoin d\'aide.\nMerci d\'appeler le numéro ci-dessous.',sosDur:3000,sosVoice:true,sosSms:true,longPress:800,sosPress:3000};
 
 function cloneArr(a){var r=[];for(var i=0;i<a.length;i++)r.push({icon:a[i].icon,label:a[i].label,cat:a[i].cat});return r;}
 function load(){
@@ -432,8 +434,8 @@ function startSOSCharge(){
   if(sosOn)return;sosCharging=true;
   document.getElementById('sosCharge').classList.add('on');
   var ring=document.getElementById('sosRingFill');
-  ring.classList.remove('spin');ring.style.setProperty('--dur',S.sosDur+'ms');void ring.offsetWidth;ring.classList.add('spin');
-  sosChTmr=setTimeout(function(){document.getElementById('sosCharge').classList.remove('on');document.getElementById('sosRingFill').classList.remove('spin');sosCharging=false;fireSOS();},S.sosDur);
+  ring.classList.remove('spin');ring.style.setProperty('--dur',S.sosPress+'ms');void ring.offsetWidth;ring.classList.add('spin');
+  sosChTmr=setTimeout(function(){document.getElementById('sosCharge').classList.remove('on');document.getElementById('sosRingFill').classList.remove('spin');sosCharging=false;},S.sosPress);
 }
 function cancelSOSCharge(){if(!sosCharging)return;sosCharging=false;clearTimeout(sosChTmr);document.getElementById('sosCharge').classList.remove('on');document.getElementById('sosRingFill').classList.remove('spin');}
 function fireSOS(){
@@ -484,9 +486,10 @@ function renderOv(){
   document.getElementById('rSpeed').value=S.scanSpeed;document.getElementById('vSpeed').textContent=(S.scanSpeed/1000).toFixed(1)+'s';
   document.getElementById('rPause').value=S.pauseAfter;document.getElementById('vPause').textContent=(S.pauseAfter/1000).toFixed(1)+'s';
   document.getElementById('iSosName').value=S.sosName;document.getElementById('iSosPhone').value=S.sosPhone;document.getElementById('iSosMsg').value=S.sosMsg;
-  document.getElementById('rSosDur').value=S.sosDur;document.getElementById('vSosDur').textContent=(S.sosDur/1000).toFixed(1)+'s';
   document.getElementById('togSosV').classList.toggle('on',S.sosVoice);
   document.getElementById('togSosSms').classList.toggle('on',S.sosSms);
+  document.getElementById('rLongPress').value=S.longPress;document.getElementById('vLongPress').textContent=(S.longPress/1000).toFixed(1)+'s';
+  document.getElementById('rSosPress').value=S.sosPress;document.getElementById('vSosPress').textContent=(S.sosPress/1000).toFixed(1)+'s';
   renderEditor();
 }
 function renderEditor(){
@@ -524,82 +527,85 @@ document.addEventListener('touchend',function(e){
   if(Math.abs(d)>45)go(d<0?1:-1);
 },{passive:true});
 
-// ── BLE HID : Espace (next), Entrée (select), Échap (SOS) ──
-// L'ESP32 envoie Espace au moment de l'appui (keydown), puis
-// au relâchement : Espace keyup + éventuellement Entrée (long)
-// ou Échap (très long). Un petit délai permet de distinguer
-// un appui court (Espace seul → next) d'un appui long
-// (Espace + Entrée/Échap → select/SOS).
-var bleNextTmr=null;
-var bleSpaceDown=false;
-
-function bleCancelNext(){
-  if(bleNextTmr){clearTimeout(bleNextTmr);bleNextTmr=null;}
-}
-
-function bleDoNext(){
-  bleNextTmr=null;
-  if(ovOpen||sosOn)return;
-  // Appui court = avancer dans le scan ou naviguer
-  if(S.scanOn){
-    // En mode scan : un appui court valide la sélection en surbrillance
-    scanSelect();
-  } else {
-    // Hors scan : avancer manuellement
-    if(curView==='dock'){enterCat(0);}
-    else if(curView==='car'){go(1);}
-  }
-}
+// ── Bouton BLE : l'ESP32 envoie UNIQUEMENT Espace ──
+// keyDown Espace = bouton enfoncé
+// keyUp Espace   = bouton relâché
+// C'est ICI qu'on mesure la durée et qu'on décide :
+//   court          → avancer / valider scan
+//   long (S.longPress ms)  → sélectionner
+//   très long (S.sosPress ms) → SOS
+// Les seuils sont dans S (réglables par l'aidant).
+var btnDown=false;
+var btnDownTime=0;
+var sosTmr=null;
 
 document.addEventListener('keydown',function(e){
   if(ovOpen)return;
 
-  // ── Espace (BLE: appui bouton) ──
   if(e.key===' '){
     e.preventDefault();
-    if(bleSpaceDown)return; // éviter les répétitions auto
-    bleSpaceDown=true;
-    bleCancelNext();
-    // Feedback visuel + démarrer animation SOS charge
+    if(btnDown)return;
+    btnDown=true;
+    btnDownTime=Date.now();
+
+    // Feedback visuel immédiat
     document.body.style.outline='3px solid var(--accent)';
+
+    // Lancer l'animation SOS (charge visuelle)
     if(!sosOn)startSOSCharge();
+
+    // Timer SOS : si toujours enfoncé après sosPress ms → SOS
+    clearTimeout(sosTmr);
+    sosTmr=setTimeout(function(){
+      if(!btnDown)return;
+      // SOS déclenché pendant l'appui (pas besoin d'attendre keyUp)
+      document.body.style.outline='none';
+      if(sosOn){endSOS();}else{fireSOS();}
+      btnDown=false; // consommé
+    },S.sosPress);
+
     return;
   }
 
-  // ── Entrée (BLE: appui long → sélection) ──
-  if(e.key==='Enter'){
-    e.preventDefault();
-    bleCancelNext();
-    if(sosOn)return; // on ignore Enter en mode SOS
-    scanSelect();
-    return;
-  }
-
-  // ── Échap (BLE: appui très long → SOS toggle) ──
-  if(e.key==='Escape'){
-    e.preventDefault();
-    bleCancelNext();
-    if(sosOn){endSOS();}else{fireSOS();}
-    return;
-  }
-
-  // ── Flèches (clavier physique pour démo/test) ──
+  // Flèches (clavier physique pour démo/test)
   if(e.key==='ArrowRight'){if(curView==='car')go(1);}
   if(e.key==='ArrowLeft'){if(curView==='car')go(-1);}
   if(e.key==='Backspace'){if(curView==='car')goHome();}
 });
 
 document.addEventListener('keyup',function(e){
-  if(e.key===' '){
-    e.preventDefault();
-    bleSpaceDown=false;
-    // Retirer feedback visuel + annuler animation SOS
-    document.body.style.outline='none';
-    cancelSOSCharge();
-    // Petit délai : si Enter ou Escape arrive dans 150ms,
-    // c'était un appui long/très long. Sinon → appui court (next).
-    bleCancelNext();
-    bleNextTmr=setTimeout(bleDoNext,150);
+  if(e.key!==' ')return;
+  e.preventDefault();
+  if(!btnDown)return;
+  btnDown=false;
+  clearTimeout(sosTmr);
+
+  // Retirer feedback visuel + annuler animation SOS
+  document.body.style.outline='none';
+  cancelSOSCharge();
+
+  var duration=Date.now()-btnDownTime;
+
+  if(sosOn){
+    // En mode SOS, un appui court annule l'alerte
+    endSOS();
+    return;
+  }
+
+  if(duration>=S.sosPress){
+    // SOS (normalement déjà déclenché par le timer, mais sécurité)
+    if(!sosOn)fireSOS();
+  } else if(duration>=S.longPress){
+    // Appui long → sélection
+    scanSelect();
+  } else {
+    // Appui court → avancer
+    if(S.scanOn){
+      scanSelect();
+    } else {
+      if(curView==='dock'){enterCat(0);}
+      else if(curView==='car'){go(1);}
+    }
   }
 });
 
