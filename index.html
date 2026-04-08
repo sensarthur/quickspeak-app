@@ -170,16 +170,16 @@
     .scan-badge { position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:50;background:var(--accent);color:#050510;font-size:.68em;font-weight:900;padding:3px 10px;border-radius:7px;display:none;box-shadow:0 2px 10px rgba(56,189,248,.3); }
     .scan-badge.on { display:block; }
 
-    .update-banner { display:none; position:fixed; bottom:20px; left:20px; right:20px; z-index:500; background:var(--accent); color:#050510; font-family:inherit; font-size:.85em; font-weight:800; padding:12px 18px; border-radius:14px; align-items:center; justify-content:space-between; gap:10px; box-shadow:0 4px 24px rgba(56,189,248,.3); }
-    .update-banner button { background:rgba(0,0,0,.15); border:none; border-radius:10px; padding:8px 16px; font-family:inherit; font-size:.85em; font-weight:800; color:#050510; cursor:pointer; }
+    /* ── Indicateur BLE discret ── */
+    .ble-dot { width:12px; height:12px; border-radius:50%; background:#3a3a4a; border:none; padding:0; cursor:pointer; transition:background .3s, box-shadow .3s; flex-shrink:0; }
+    .ble-dot.on { background:var(--green); box-shadow:0 0 8px var(--green); }
+    .ble-toast { position:fixed; top:60px; left:50%; transform:translateX(-50%); z-index:600; background:var(--surface); border:1.5px solid #2a2a3a; border-radius:12px; padding:10px 16px; font-size:.78em; font-weight:700; color:var(--text); box-shadow:0 4px 24px rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .25s; max-width:80%; text-align:center; }
+    .ble-toast.on { opacity:1; }
   </style>
 </head>
 <body>
 
-<div class="update-banner" id="updateBanner">
-  <span>Mise à jour disponible</span>
-  <button onclick="location.reload()">Actualiser</button>
-</div>
+<div class="ble-toast" id="bleToast"></div>
 <div class="scan-badge" id="scanBadge">▶ SCAN</div>
 <div class="sos-charge" id="sosCharge">
   <div class="sos-ring"><div class="sos-ring-fill" id="sosRingFill"></div><div class="sos-ring-ico">🆘</div></div>
@@ -193,7 +193,7 @@
     <div class="logo"><span>🗣️</span> QuickSpeak</div>
     <div class="header-right">
       <button class="gear-btn" onclick="openOv()">⚙️</button>
-      <div class="ws-badge"><span>🔵 BLE</span></div>
+      <button class="ble-dot" onclick="bleClick()" title="État BLE"></button>
     </div>
   </div>
   <div class="crumb"><b>Accueil</b></div>
@@ -207,7 +207,7 @@
     <div class="logo"><span>🗣️</span> QuickSpeak</div>
     <div class="header-right">
       <button class="gear-btn" onclick="openOv()">⚙️</button>
-      <div class="ws-badge"><span>🔵 BLE</span></div>
+      <button class="ble-dot" onclick="bleClick()" title="État BLE"></button>
     </div>
   </div>
   <div class="crumb"><span class="back" onclick="goHome()">Accueil</span> › <b id="crumbCat"></b></div>
@@ -251,6 +251,7 @@
   </div>
   <div class="tab-pane on" id="tp0">
     <div class="cats" id="ovCats" style="padding-left:0"></div>
+    <div id="catTools" style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap"></div>
     <div id="phraseList"></div>
     <div class="add-box">
       <input id="fIcon" placeholder="Emoji (ex: 😊)" maxlength="4">
@@ -269,6 +270,18 @@
   </div>
   <div class="tab-pane" id="tp2">
     <div class="s-box">
+      <div class="s-label">Mode de déclenchement</div>
+      <div class="s-sub" style="margin-bottom:6px">Comment l'utilisateur déclenche le SOS depuis le bouton</div>
+      <select class="s-input" id="iSosTrigger" onchange="S.sosTrigger=this.value;saveS();renderOv()">
+        <option value="off">Désactivé</option>
+        <option value="long">Appui très long</option>
+        <option value="dbl">Double-clic</option>
+        <option value="tpl">Triple-clic</option>
+        <option value="quad">Quadruple-clic</option>
+      </select>
+      <div class="s-sub" style="margin-top:6px">5 s après déclenchement, un appui court annule. Au-delà, refaire la même séquence pour arrêter.</div>
+    </div>
+    <div class="s-box">
       <div style="margin-bottom:8px"><div class="s-label">Nom du contact</div><input class="s-input" id="iSosName" placeholder="Ex: Maman" oninput="S.sosName=this.value;saveS()"></div>
       <div style="margin-bottom:8px"><div class="s-label">Téléphone</div><input class="s-input" id="iSosPhone" type="tel" placeholder="06 01 02 03 04" oninput="S.sosPhone=this.value;saveS()"></div>
       <div><div class="s-label">Message passants</div><input class="s-input" id="iSosMsg" placeholder="Bonjour, j'ai besoin d'aide." oninput="S.sosMsg=this.value;saveS()"></div>
@@ -280,10 +293,11 @@
   </div>
   <div class="tab-pane" id="tp3">
     <div class="s-box">
-      <div class="s-label">Durées d'appui bouton</div>
-      <div class="s-sub" style="margin-bottom:8px">Ajustez la sensibilité selon l'utilisateur</div>
-      <div class="s-row"><div style="flex:1"><div class="s-label">Appui long → Sélection</div><div class="s-sub">Durée pour valider un choix</div><input type="range" class="s-range" id="rLongPress" min="300" max="2000" step="100" oninput="S.longPress=+this.value;document.getElementById('vLongPress').textContent=(S.longPress/1000).toFixed(1)+'s';saveS()"></div><div class="s-val" id="vLongPress">0.8s</div></div>
-      <div class="s-row"><div style="flex:1"><div class="s-label">Appui très long → SOS</div><div class="s-sub">Durée pour déclencher l'alerte</div><input type="range" class="s-range" id="rSosPress" min="1500" max="6000" step="500" oninput="S.sosPress=+this.value;document.getElementById('vSosPress').textContent=(S.sosPress/1000).toFixed(1)+'s';saveS()"></div><div class="s-val" id="vSosPress">3.0s</div></div>
+      <div class="s-label">Logique du bouton</div>
+      <div class="s-sub" style="margin-bottom:8px">Court = valider · Long = retour · Très long = SOS</div>
+      <div class="s-row"><div style="flex:1"><div class="s-label">Seuil appui long → Retour</div><div class="s-sub">Au-dessus de ce seuil, relâcher = retour</div><input type="range" class="s-range" id="rLongPress" min="300" max="2000" step="100" oninput="S.longPress=+this.value;document.getElementById('vLongPress').textContent=(S.longPress/1000).toFixed(1)+'s';saveS()"></div><div class="s-val" id="vLongPress">0.8s</div></div>
+      <div class="s-row"><div style="flex:1"><div class="s-label">Seuil appui très long → SOS</div><div class="s-sub">Au-dessus de ce seuil, SOS déclenché</div><input type="range" class="s-range" id="rSosPress" min="1500" max="6000" step="500" oninput="S.sosPress=+this.value;document.getElementById('vSosPress').textContent=(S.sosPress/1000).toFixed(1)+'s';saveS()"></div><div class="s-val" id="vSosPress">3.0s</div></div>
+      <div class="s-row"><div style="flex:1"><div class="s-label">Action « Retour »</div><div class="s-sub">Comportement de l'appui long</div><select class="s-input" id="iBackMode" style="margin-top:6px" onchange="S.backMode=this.value;saveS()"><option value="parent">Niveau précédent</option><option value="home">Accueil direct</option></select></div></div>
     </div>
     <div class="s-box">
       <div class="s-label">Pairing Bluetooth</div>
@@ -292,6 +306,10 @@
     <div class="s-box">
       <div class="s-label">Fonctionnement</div>
       <div class="s-sub">Le bouton envoie uniquement "Espace" au téléphone. C'est cette application qui décide quoi faire selon la durée de l'appui.</div>
+    </div>
+    <div class="s-box">
+      <div class="s-label">Version</div>
+      <div class="s-sub" id="sAppVersion">QuickSpeak —</div>
     </div>
   </div>
 </div>
@@ -306,15 +324,24 @@ var DEFAULTS=[
 ];
 var CAT_ICONS={"Basique":"💬","Besoins":"🫶","Social":"😊","Déplacement":"🚀","Urgence":"🚨"};
 var phrases,cats,ci=0,idx=0,busy=false,curView='dock',scanTmr=null,scanIdx=0,sosOn=false,sosVTmr=null,ovOpen=false;
-var S={scanOn:false,scanSpeed:2000,pauseAfter:3000,sosName:'',sosPhone:'',sosMsg:'Bonjour, j\'ai besoin d\'aide.\nMerci d\'appeler le numéro ci-dessous.',sosDur:3000,sosVoice:true,sosSms:true,longPress:800,sosPress:3000};
+var S={scanOn:false,scanSpeed:2000,pauseAfter:3000,sosName:'',sosPhone:'',sosMsg:'Bonjour, j\'ai besoin d\'aide.\nMerci d\'appeler le numéro ci-dessous.',sosDur:3000,sosVoice:true,sosSms:true,longPress:800,sosPress:3000,backMode:'parent',sosTrigger:'off',sosGraceMs:5000};
 
 function cloneArr(a){var r=[];for(var i=0;i<a.length;i++)r.push({icon:a[i].icon,label:a[i].label,cat:a[i].cat});return r;}
 function load(){
   try{var s=localStorage.getItem('qs_p');phrases=s?JSON.parse(s):cloneArr(DEFAULTS);}catch(e){phrases=cloneArr(DEFAULTS);}
   try{var s2=localStorage.getItem('qs_s');if(s2){var o=JSON.parse(s2);for(var k in o)S[k]=o[k];}}catch(e){}
-  cats=[];var seen={};for(var i=0;i<phrases.length;i++){if(!seen[phrases[i].cat]){seen[phrases[i].cat]=1;cats.push(phrases[i].cat);}}
+  // Ordre des catégories : on lit qs_cats si présent, sinon on reconstruit depuis phrases
+  var stored=null;
+  try{var s3=localStorage.getItem('qs_cats');if(s3)stored=JSON.parse(s3);}catch(e){}
+  var seen={};cats=[];
+  if(stored&&stored.length){
+    for(var a=0;a<stored.length;a++){if(!seen[stored[a]]){seen[stored[a]]=1;cats.push(stored[a]);}}
+  }
+  // Ajoute en fin toute catégorie présente dans phrases mais absente de l'ordre stocké
+  for(var i=0;i<phrases.length;i++){if(!seen[phrases[i].cat]){seen[phrases[i].cat]=1;cats.push(phrases[i].cat);}}
 }
 function saveP(){try{localStorage.setItem('qs_p',JSON.stringify(phrases));}catch(e){}}
+function saveC(){try{localStorage.setItem('qs_cats',JSON.stringify(cats));}catch(e){}}
 function saveS(){try{localStorage.setItem('qs_s',JSON.stringify(S));}catch(e){}}
 function filtered(){var r=[];for(var i=0;i<phrases.length;i++)if(phrases[i].cat===cats[ci])r.push(phrases[i]);return r;}
 
@@ -330,6 +357,16 @@ function showView(name){
 }
 function goHome(){ci=0;idx=0;showView('dock');}
 function enterCat(i){ci=i;idx=0;showView('car');}
+// Retour : depuis le carousel → dock ; depuis dock → rien (déjà au top).
+// backMode 'parent' et 'home' donnent le même résultat tant qu'on n'a qu'un niveau de profondeur ;
+// la distinction est prête pour une future arborescence plus profonde.
+function goBack(){
+  // 'parent' et 'home' sont équivalents tant qu'il n'y a qu'un niveau de profondeur
+  if(curView==='car'){
+    if(S.backMode==='home')goHome();else showView('dock');
+  }
+  // dock = pas de cran au-dessus
+}
 
 // ── Dock ──
 function renderDock(){
@@ -485,38 +522,98 @@ function renderOv(){
   document.getElementById('togScan').classList.toggle('on',S.scanOn);
   document.getElementById('rSpeed').value=S.scanSpeed;document.getElementById('vSpeed').textContent=(S.scanSpeed/1000).toFixed(1)+'s';
   document.getElementById('rPause').value=S.pauseAfter;document.getElementById('vPause').textContent=(S.pauseAfter/1000).toFixed(1)+'s';
+  var st=document.getElementById('iSosTrigger');if(st)st.value=S.sosTrigger||'off';
   document.getElementById('iSosName').value=S.sosName;document.getElementById('iSosPhone').value=S.sosPhone;document.getElementById('iSosMsg').value=S.sosMsg;
   document.getElementById('togSosV').classList.toggle('on',S.sosVoice);
   document.getElementById('togSosSms').classList.toggle('on',S.sosSms);
   document.getElementById('rLongPress').value=S.longPress;document.getElementById('vLongPress').textContent=(S.longPress/1000).toFixed(1)+'s';
   document.getElementById('rSosPress').value=S.sosPress;document.getElementById('vSosPress').textContent=(S.sosPress/1000).toFixed(1)+'s';
+  var bm=document.getElementById('iBackMode');if(bm)bm.value=S.backMode||'parent';
+  var av=document.getElementById('sAppVersion');if(av)av.textContent='QuickSpeak '+APP_VERSION;
   renderEditor();
 }
 function renderEditor(){
-  var h='';for(var i=0;i<cats.length;i++)h+='<button class="pill '+(i===ci?'on':'')+'" onclick="ci='+i+';renderEditor()">'+cats[i]+'</button>';
+  if(ci>=cats.length)ci=Math.max(0,cats.length-1);
+  // Pills + bouton "nouvelle catégorie"
+  var h='';
+  for(var i=0;i<cats.length;i++)h+='<button class="pill '+(i===ci?'on':'')+'" onclick="ci='+i+';renderEditor()">'+cats[i]+'</button>';
+  h+='<button class="pill" onclick="catNew()" style="border-color:var(--accent);color:var(--accent)">＋</button>';
   document.getElementById('ovCats').innerHTML=h;
+  // Barre d'outils de la catégorie sélectionnée
+  var tb=document.getElementById('catTools');
+  if(tb){
+    if(cats.length){
+      tb.style.display='flex';
+      tb.innerHTML='<button class="btn" onclick="catMove(-1)" '+(ci<=0?'disabled style="opacity:.4"':'')+'>◀</button>'+
+                   '<button class="btn" onclick="catMove(1)" '+(ci>=cats.length-1?'disabled style="opacity:.4"':'')+'>▶</button>'+
+                   '<button class="btn" onclick="catRename()" style="flex:1">✏️ Renommer</button>'+
+                   '<button class="btn" onclick="catDelete()" style="color:var(--red)">🗑</button>';
+    }else{tb.style.display='none';}
+  }
+  // Liste des phrases de la catégorie
   var f=filtered(),h2='';
   for(var j=0;j<f.length;j++){
     var gi=-1;for(var k=0;k<phrases.length;k++)if(phrases[k]===f[j]){gi=k;break;}
     h2+='<div class="p-item"><span class="p-em">'+f[j].icon+'</span><span class="p-tx">'+f[j].label+'</span><button class="p-del" onclick="delP('+gi+')">🗑</button></div>';
   }
   document.getElementById('phraseList').innerHTML=h2;
+  // Select d'ajout de phrase
   var h3='';for(var i=0;i<cats.length;i++)h3+='<option>'+cats[i]+'</option>';
   h3+='<option value="__new">+ Nouvelle catégorie</option>';
   document.getElementById('fCat').innerHTML=h3;
+}
+
+// ── CRUD catégories ──
+function catNew(){
+  var name=prompt('Nom de la nouvelle catégorie :');
+  if(!name)return;
+  name=name.trim();if(!name)return;
+  for(var i=0;i<cats.length;i++)if(cats[i]===name){alert('Cette catégorie existe déjà.');return;}
+  cats.push(name);saveC();ci=cats.length-1;renderEditor();
+}
+function catRename(){
+  if(!cats.length)return;
+  var old=cats[ci];
+  var name=prompt('Nouveau nom pour « '+old+' » :',old);
+  if(!name)return;
+  name=name.trim();if(!name||name===old)return;
+  for(var i=0;i<cats.length;i++)if(cats[i]===name){alert('Cette catégorie existe déjà.');return;}
+  cats[ci]=name;
+  for(var j=0;j<phrases.length;j++)if(phrases[j].cat===old)phrases[j].cat=name;
+  saveC();saveP();renderEditor();
+}
+function catMove(dir){
+  var ni=ci+dir;
+  if(ni<0||ni>=cats.length)return;
+  var tmp=cats[ci];cats[ci]=cats[ni];cats[ni]=tmp;
+  ci=ni;saveC();renderEditor();
+}
+function catDelete(){
+  if(!cats.length)return;
+  var name=cats[ci];
+  var cnt=0;for(var i=0;i<phrases.length;i++)if(phrases[i].cat===name)cnt++;
+  if(!confirm('Supprimer la catégorie « '+name+' »'+(cnt?' et ses '+cnt+' phrase(s)':'')+' ? Action irréversible.'))return;
+  phrases=phrases.filter(function(p){return p.cat!==name;});
+  cats.splice(ci,1);
+  if(ci>=cats.length)ci=Math.max(0,cats.length-1);
+  saveP();saveC();renderEditor();
 }
 function addP(){
   var icon=document.getElementById('fIcon').value.trim()||'💬';
   var label=document.getElementById('fLabel').value.trim();
   var cat=document.getElementById('fCat').value;
   if(!label)return;
-  if(cat==='__new'){cat=prompt('Nom:');if(!cat)return;}
-  phrases.push({icon:icon,label:label,cat:cat});saveP();load();
+  if(cat==='__new'){cat=prompt('Nom:');if(!cat)return;cat=cat.trim();if(!cat)return;}
+  phrases.push({icon:icon,label:label,cat:cat});
+  // Assure que la catégorie existe dans l'ordre persisté
+  var found=false;for(var i=0;i<cats.length;i++)if(cats[i]===cat){found=true;break;}
+  if(!found)cats.push(cat);
+  saveP();saveC();load();
   document.getElementById('fIcon').value='';document.getElementById('fLabel').value='';
   renderEditor();
 }
 function delP(i){phrases.splice(i,1);saveP();load();if(idx>=filtered().length)idx=Math.max(0,filtered().length-1);renderEditor();}
-function resetAll(){if(!confirm('Réinitialiser ?'))return;phrases=cloneArr(DEFAULTS);saveP();load();ci=0;idx=0;renderEditor();}
+function resetAll(){if(!confirm('Réinitialiser ?'))return;phrases=cloneArr(DEFAULTS);try{localStorage.removeItem('qs_cats');}catch(e){}saveP();load();ci=0;idx=0;renderEditor();}
 
 // ── Touch & Keys ──
 var tx=0;
@@ -528,42 +625,100 @@ document.addEventListener('touchend',function(e){
 },{passive:true});
 
 // ── Bouton BLE : l'ESP32 envoie UNIQUEMENT Espace ──
-// keyDown Espace = bouton enfoncé
-// keyUp Espace   = bouton relâché
-// C'est ICI qu'on mesure la durée et qu'on décide :
-//   court          → avancer / valider scan
-//   long (S.longPress ms)  → sélectionner
-//   très long (S.sosPress ms) → SOS
-// Les seuils sont dans S (réglables par l'aidant).
+// keyDown Espace = bouton enfoncé, keyUp Espace = bouton relâché.
+// Logique au RELÂCHEMENT :
+//   court (< S.longPress)              → GO
+//   long  (S.longPress .. S.sosPress)  → RETOUR
+//   très long (≥ S.sosPress)           → SOS SI S.sosTrigger==='long'
+// Modes SOS (S.sosTrigger) :
+//   'off'  : SOS désactivé
+//   'long' : appui très long
+//   'dbl'  : double-clic rapide
+//   'tpl'  : triple-clic rapide
+//   'quad' : quadruple-clic rapide
+// Délai de grâce : 5 s après déclenchement, un appui court annule.
+// Après la grâce, refaire la séquence de déclenchement pour arrêter.
 var btnDown=false;
 var btnDownTime=0;
 var sosTmr=null;
+var backFbTmr=null;
+var sosGraceUntil=0;
+var clickCount=0;
+var clickTmr=null;
+var CLICK_WINDOW=400;
+
+function clearBtnFeedback(){
+  document.body.style.outline='none';
+  document.body.style.outlineOffset='';
+  cancelSOSCharge();
+  clearTimeout(backFbTmr);backFbTmr=null;
+  clearTimeout(sosTmr);sosTmr=null;
+}
+function sosCountTarget(){
+  return S.sosTrigger==='dbl'?2:S.sosTrigger==='tpl'?3:S.sosTrigger==='quad'?4:0;
+}
+function registerClick(){
+  // Enregistre un clic court dans la fenêtre multi-clic. Retourne true si
+  // la séquence SOS vient d'être complétée (= déclencher ou arrêter SOS).
+  var target=sosCountTarget();
+  if(!target)return false;
+  clickCount++;
+  clearTimeout(clickTmr);
+  if(clickCount>=target){
+    clickCount=0;
+    return true;
+  }
+  clickTmr=setTimeout(function(){clickCount=0;},CLICK_WINDOW);
+  return false;
+}
+function triggerOrCancelSOS(){
+  if(sosOn){endSOS();}else{fireSOSWithGrace();}
+}
+function fireSOSWithGrace(){
+  sosGraceUntil=Date.now()+(S.sosGraceMs||5000);
+  fireSOS();
+}
 
 document.addEventListener('keydown',function(e){
   if(ovOpen)return;
 
   if(e.key===' '){
     e.preventDefault();
+    bleTouch();
     if(btnDown)return;
     btnDown=true;
     btnDownTime=Date.now();
 
-    // Feedback visuel immédiat
+    // Feedback bleu = GO si on relâche maintenant
     document.body.style.outline='3px solid var(--accent)';
+    document.body.style.outlineOffset='-3px';
 
-    // Lancer l'animation SOS (charge visuelle)
-    if(!sosOn)startSOSCharge();
-
-    // Timer SOS : si toujours enfoncé après sosPress ms → SOS
-    clearTimeout(sosTmr);
-    sosTmr=setTimeout(function(){
+    // À T1 : passe en orange (= RETOUR si on relâche maintenant).
+    // La charge SOS visuelle ne s'affiche QUE si le mode SOS est 'long'.
+    backFbTmr=setTimeout(function(){
       if(!btnDown)return;
-      // SOS déclenché pendant l'appui (pas besoin d'attendre keyUp)
-      document.body.style.outline='none';
-      if(sosOn){endSOS();}else{fireSOS();}
-      btnDown=false; // consommé
-    },S.sosPress);
+      document.body.style.outline='3px solid var(--orange)';
+      if(S.sosTrigger==='long'){
+        var remaining=Math.max(300,S.sosPress-S.longPress);
+        var ring=document.getElementById('sosRingFill');
+        document.getElementById('sosCharge').classList.add('on');
+        ring.classList.remove('spin');
+        ring.style.setProperty('--dur',remaining+'ms');
+        void ring.offsetWidth;
+        ring.classList.add('spin');
+        sosCharging=true;
+      }
+    },S.longPress);
 
+    // À T2 : déclenchement SOS SEULEMENT si trigger = 'long'.
+    if(S.sosTrigger==='long'){
+      sosTmr=setTimeout(function(){
+        if(!btnDown)return;
+        clearBtnFeedback();
+        btnDown=false;
+        triggerOrCancelSOS();
+      },S.sosPress);
+    }
     return;
   }
 
@@ -578,55 +733,70 @@ document.addEventListener('keyup',function(e){
   e.preventDefault();
   if(!btnDown)return;
   btnDown=false;
-  clearTimeout(sosTmr);
-
-  // Retirer feedback visuel + annuler animation SOS
-  document.body.style.outline='none';
-  cancelSOSCharge();
 
   var duration=Date.now()-btnDownTime;
+  clearBtnFeedback();
 
+  // ── Gestion du mode SOS déjà actif ──
   if(sosOn){
-    // En mode SOS, un appui court annule l'alerte
-    endSOS();
+    var inGrace=Date.now()<sosGraceUntil;
+    if(inGrace){
+      // Pendant les 5 s de grâce : n'importe quel relâchement court annule
+      if(duration<S.longPress){endSOS();return;}
+    }
+    // Hors grâce : seul le même geste qu'au déclenchement arrête le SOS
+    if(S.sosTrigger==='long'&&duration>=S.sosPress){endSOS();return;}
+    if(S.sosTrigger!=='long'&&S.sosTrigger!=='off'&&duration<S.longPress){
+      if(registerClick())endSOS();
+    }
     return;
   }
 
-  if(duration>=S.sosPress){
-    // SOS (normalement déjà déclenché par le timer, mais sécurité)
-    if(!sosOn)fireSOS();
-  } else if(duration>=S.longPress){
-    // Appui long → sélection
-    scanSelect();
-  } else {
-    // Appui court → avancer
-    if(S.scanOn){
-      scanSelect();
-    } else {
-      if(curView==='dock'){enterCat(0);}
-      else if(curView==='car'){go(1);}
-    }
+  // ── Mode normal ──
+  if(S.sosTrigger==='long'&&duration>=S.sosPress){
+    // Sécurité : normalement déjà déclenché par sosTmr
+    fireSOSWithGrace();
+    return;
+  }
+  if(duration>=S.longPress){
+    // Appui long → RETOUR
+    goBack();
+    return;
+  }
+  // Appui court → GO (+ comptage si mode multi-clic actif)
+  scanSelect();
+  if(S.sosTrigger==='dbl'||S.sosTrigger==='tpl'||S.sosTrigger==='quad'){
+    if(registerClick())fireSOSWithGrace();
   }
 });
 
 // ── Init ──
 load();showView('dock');
 
-// ── PWA : Service Worker ──
+// ── Indicateur BLE (heuristique : event reçu < 60s = "actif") ──
+var bleSeen=0;
+function bleTouch(){bleSeen=Date.now();bleRefresh();}
+function bleRefresh(){
+  var on=(Date.now()-bleSeen)<60000;
+  var dd=document.querySelectorAll('.ble-dot');
+  for(var i=0;i<dd.length;i++)dd[i].classList.toggle('on',on);
+}
+setInterval(bleRefresh,5000);
+function bleClick(){
+  var on=(Date.now()-bleSeen)<60000;
+  var msg=on?'BLE actif — dernier signal il y a '+Math.round((Date.now()-bleSeen)/1000)+'s':'Aucun signal BLE récent. Vérifie l\'appairage dans Réglages iOS → Bluetooth → QuickSpeak.';
+  var t=document.getElementById('bleToast');
+  t.textContent=msg;t.classList.add('on');
+  setTimeout(function(){t.classList.remove('on');},3500);
+}
+
+// ── PWA : Service Worker (mise à jour silencieuse) ──
+// Le SW fait skipWaiting + clients.claim et met le cache à jour en arrière-plan.
+// Le nouveau code est servi au prochain démarrage de l'app, sans interruption.
+var APP_VERSION='v5.1';
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js').then(function(reg){
-    console.log('QuickSpeak SW enregistré');
-  }).catch(function(err){
-    console.log('SW erreur:',err);
-  });
-  // Écouter les mises à jour
-  navigator.serviceWorker.addEventListener('message',function(e){
-    if(e.data&&e.data.type==='UPDATE_AVAILABLE'){
-      // Afficher un discret bandeau de mise à jour
-      var banner=document.getElementById('updateBanner');
-      if(banner)banner.style.display='flex';
-    }
-  });
+  navigator.serviceWorker.register('./sw.js').catch(function(err){console.log('SW erreur:',err);});
+  // Le message UPDATE_AVAILABLE est ignoré côté UI : silencieux par design.
 }
 </script>
 </body>
