@@ -167,8 +167,12 @@
     .add-box input,.add-box select { background:#0d0d18;border:1.5px solid #2a2a3a;border-radius:11px;padding:10px 13px;color:var(--text);font-family:inherit;font-size:.9em; }
     .add-box input:focus,.add-box select:focus { outline:none;border-color:var(--accent); }
 
-    .scan-badge { position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:50;background:var(--accent);color:#050510;font-size:.68em;font-weight:900;padding:3px 10px;border-radius:7px;display:none;box-shadow:0 2px 10px rgba(56,189,248,.3); }
-    .scan-badge.on { display:block; }
+    /* Pastille scan discrète avec compteur de cycles */
+    .scan-badge { position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:50;display:none;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.35);color:var(--accent);font-size:.62em;font-weight:700;letter-spacing:.03em;opacity:.75;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:none; }
+    .scan-badge.on { display:inline-flex; }
+    .scan-badge .sb-dot { width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:sbPulse 1.6s ease-in-out infinite; }
+    .scan-badge .sb-count { opacity:.85;font-variant-numeric:tabular-nums; }
+    @keyframes sbPulse { 0%,100%{opacity:.35;transform:scale(.85);} 50%{opacity:1;transform:scale(1);} }
 
     /* ── Indicateur BLE discret ── */
     .ble-dot { width:12px; height:12px; border-radius:50%; background:#3a3a4a; border:none; padding:0; cursor:pointer; transition:background .3s, box-shadow .3s; flex-shrink:0; }
@@ -180,7 +184,7 @@
 <body>
 
 <div class="ble-toast" id="bleToast"></div>
-<div class="scan-badge" id="scanBadge">▶ SCAN</div>
+<div class="scan-badge" id="scanBadge"><span class="sb-dot"></span><span>SCAN</span><span class="sb-count" id="scanBadgeCount">1/3</span></div>
 <div class="sos-charge" id="sosCharge">
   <div class="sos-ring"><div class="sos-ring-fill" id="sosRingFill"></div><div class="sos-ring-ico">🆘</div></div>
   <div class="sos-charge-txt">SOS en cours...</div>
@@ -266,6 +270,8 @@
       <div class="s-row"><div><div class="s-label">Mode scan</div><div class="s-sub">Défilement auto + bouton unique</div></div><div class="tog" id="togScan" onclick="S.scanOn=!S.scanOn;this.classList.toggle('on',S.scanOn);saveS()"></div></div>
       <div class="s-row"><div style="flex:1"><div class="s-label">Vitesse</div><input type="range" class="s-range" id="rSpeed" min="800" max="5000" step="200" oninput="S.scanSpeed=+this.value;document.getElementById('vSpeed').textContent=(S.scanSpeed/1000).toFixed(1)+'s';saveS()"></div><div class="s-val" id="vSpeed">2.0s</div></div>
       <div class="s-row"><div style="flex:1"><div class="s-label">Pause après parole</div><input type="range" class="s-range" id="rPause" min="1000" max="8000" step="500" oninput="S.pauseAfter=+this.value;document.getElementById('vPause').textContent=(S.pauseAfter/1000).toFixed(1)+'s';saveS()"></div><div class="s-val" id="vPause">3.0s</div></div>
+      <div class="s-row"><div style="flex:1"><div class="s-label">Anti-rebond</div><div class="s-sub">Ignore les clics trop rapprochés (tremblements)</div><input type="range" class="s-range" id="rDebounce" min="0" max="1000" step="50" oninput="S.debounceMs=+this.value;document.getElementById('vDebounce').textContent=S.debounceMs+' ms';saveS()"></div><div class="s-val" id="vDebounce">300 ms</div></div>
+      <div class="s-row"><div style="flex:1"><div class="s-label">Arrêt auto du scan</div><div class="s-sub">Cycles complets sans sélection avant arrêt</div><input type="range" class="s-range" id="rCycles" min="1" max="8" step="1" oninput="S.scanMaxCycles=+this.value;document.getElementById('vCycles').textContent=S.scanMaxCycles+' cycles';saveS();updateScanBadge()"></div><div class="s-val" id="vCycles">3 cycles</div></div>
     </div>
   </div>
   <div class="tab-pane" id="tp2">
@@ -324,7 +330,9 @@ var DEFAULTS=[
 ];
 var CAT_ICONS={"Basique":"💬","Besoins":"🫶","Social":"😊","Déplacement":"🚀","Urgence":"🚨"};
 var phrases,cats,ci=0,idx=0,busy=false,curView='dock',scanTmr=null,scanIdx=0,sosOn=false,sosVTmr=null,ovOpen=false;
-var S={scanOn:false,scanSpeed:2000,pauseAfter:3000,sosName:'',sosPhone:'',sosMsg:'Bonjour, j\'ai besoin d\'aide.\nMerci d\'appeler le numéro ci-dessous.',sosDur:3000,sosVoice:true,sosSms:true,longPress:800,sosPress:3000,backMode:'parent',sosTrigger:'off',sosGraceMs:5000};
+var S={scanOn:false,scanSpeed:2000,pauseAfter:3000,sosName:'',sosPhone:'',sosMsg:'Bonjour, j\'ai besoin d\'aide.\nMerci d\'appeler le numéro ci-dessous.',sosDur:3000,sosVoice:true,sosSms:true,longPress:800,sosPress:3000,backMode:'parent',sosTrigger:'off',sosGraceMs:5000,debounceMs:300,scanMaxCycles:3};
+var scanCycle=0;     // cycle courant (1..scanMaxCycles) pendant un scan
+var scanCardCount=0; // nombre d'éléments dans le cycle en cours
 
 function cloneArr(a){var r=[];for(var i=0;i<a.length;i++)r.push({icon:a[i].icon,label:a[i].label,cat:a[i].cat});return r;}
 function load(){
@@ -425,22 +433,48 @@ speechSynthesis.getVoices();
 if(speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=function(){speechSynthesis.getVoices();};
 
 // ── Scan ──
+// startScan() est maintenant appelable à la demande : hors mode scan permanent,
+// un appui court lance un scan "one-shot" qui s'arrête tout seul après
+// S.scanMaxCycles cycles complets sans sélection.
+function updateScanBadge(){
+  var bc=document.getElementById('scanBadgeCount');
+  if(bc)bc.textContent=(scanCycle||1)+'/'+S.scanMaxCycles;
+}
 function startScan(){
-  stopScan();if(!S.scanOn)return;
+  stopScan();
+  scanCycle=1;
   document.getElementById('scanBadge').classList.add('on');
+  updateScanBadge();
   var bar=document.getElementById(curView==='dock'?'dockBar':'carBar');
   var fill=document.getElementById(curView==='dock'?'dockFill':'carFill');
   bar.classList.add('on');
+  // Nombre d'éléments à parcourir pour un cycle complet
+  if(curView==='dock'){scanCardCount=document.querySelectorAll('.dock-card').length;}
+  else if(curView==='car'){var f=filtered();scanCardCount=f.length+1;}
+  else{scanCardCount=1;}
   function tick(){
     fill.style.transition='none';fill.style.width='0%';void fill.offsetWidth;
     fill.style.transition='width '+S.scanSpeed+'ms linear';fill.style.width='100%';
     scanTmr=setTimeout(function(){
+      var wrapped=false;
       if(curView==='dock'){
         var cards=document.querySelectorAll('.dock-card');
+        if(!cards.length){stopScan();return;}
         for(var i=0;i<cards.length;i++)cards[i].classList.remove('scan-hi');
         scanIdx=(scanIdx+1)%cards.length;
+        if(scanIdx===0)wrapped=true;
         cards[scanIdx].classList.add('scan-hi');
-      }else if(curView==='car'){go(1);}
+      }else if(curView==='car'){
+        go(1);
+        if(idx===0)wrapped=true;
+      }
+      if(wrapped){
+        scanCycle++;
+        // Timeout auto uniquement hors mode scan permanent
+        if(!S.scanOn&&scanCycle>S.scanMaxCycles){stopScan();return;}
+        if(scanCycle>S.scanMaxCycles)scanCycle=1;
+        updateScanBadge();
+      }
       tick();
     },S.scanSpeed);
   }
@@ -449,9 +483,10 @@ function startScan(){
 }
 function stopScan(){
   clearTimeout(scanTmr);scanTmr=null;
+  scanCycle=0;
   var bb=document.querySelectorAll('.scan-bar');for(var i=0;i<bb.length;i++)bb[i].classList.remove('on');
   var dc=document.querySelectorAll('.dock-card');for(var i=0;i<dc.length;i++)dc[i].classList.remove('scan-hi');
-  if(!S.scanOn)document.getElementById('scanBadge').classList.remove('on');
+  document.getElementById('scanBadge').classList.remove('on');
 }
 function scanSelect(){
   if(curView==='dock'){
@@ -522,6 +557,8 @@ function renderOv(){
   document.getElementById('togScan').classList.toggle('on',S.scanOn);
   document.getElementById('rSpeed').value=S.scanSpeed;document.getElementById('vSpeed').textContent=(S.scanSpeed/1000).toFixed(1)+'s';
   document.getElementById('rPause').value=S.pauseAfter;document.getElementById('vPause').textContent=(S.pauseAfter/1000).toFixed(1)+'s';
+  var rd=document.getElementById('rDebounce');if(rd){rd.value=S.debounceMs;document.getElementById('vDebounce').textContent=S.debounceMs+' ms';}
+  var rc=document.getElementById('rCycles');if(rc){rc.value=S.scanMaxCycles;document.getElementById('vCycles').textContent=S.scanMaxCycles+' cycles';}
   var st=document.getElementById('iSosTrigger');if(st)st.value=S.sosTrigger||'off';
   document.getElementById('iSosName').value=S.sosName;document.getElementById('iSosPhone').value=S.sosPhone;document.getElementById('iSosMsg').value=S.sosMsg;
   document.getElementById('togSosV').classList.toggle('on',S.sosVoice);
@@ -646,6 +683,7 @@ var sosGraceUntil=0;
 var clickCount=0;
 var clickTmr=null;
 var CLICK_WINDOW=400;
+var lastKeyUpTime=0; // pour anti-rebond (tremblements)
 
 function clearBtnFeedback(){
   document.body.style.outline='none';
@@ -686,6 +724,9 @@ document.addEventListener('keydown',function(e){
     e.preventDefault();
     bleTouch();
     if(btnDown)return;
+    // Anti-rebond : ignore toute nouvelle pression dans la fenêtre debounceMs
+    // après le dernier relâchement (utile pour les mains tremblantes).
+    if(S.debounceMs&&Date.now()-lastKeyUpTime<S.debounceMs)return;
     btnDown=true;
     btnDownTime=Date.now();
 
@@ -733,6 +774,7 @@ document.addEventListener('keyup',function(e){
   e.preventDefault();
   if(!btnDown)return;
   btnDown=false;
+  lastKeyUpTime=Date.now();
 
   var duration=Date.now()-btnDownTime;
   clearBtnFeedback();
@@ -763,8 +805,14 @@ document.addEventListener('keyup',function(e){
     goBack();
     return;
   }
-  // Appui court → GO (+ comptage si mode multi-clic actif)
-  scanSelect();
+  // Appui court :
+  //  - si un scan est déjà en cours → sélectionne l'élément surligné
+  //  - sinon → démarre un scan (option B : un seul geste cohérent)
+  if(scanTmr){
+    scanSelect();
+  }else{
+    startScan();
+  }
   if(S.sosTrigger==='dbl'||S.sosTrigger==='tpl'||S.sosTrigger==='quad'){
     if(registerClick())fireSOSWithGrace();
   }
@@ -793,7 +841,7 @@ function bleClick(){
 // ── PWA : Service Worker (mise à jour silencieuse) ──
 // Le SW fait skipWaiting + clients.claim et met le cache à jour en arrière-plan.
 // Le nouveau code est servi au prochain démarrage de l'app, sans interruption.
-var APP_VERSION='v5.1';
+var APP_VERSION='v5.2';
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').catch(function(err){console.log('SW erreur:',err);});
   // Le message UPDATE_AVAILABLE est ignoré côté UI : silencieux par design.
