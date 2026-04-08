@@ -8,7 +8,7 @@
 //  - Si mise à jour détectée : notifie la webapp
 // ═══════════════════════════════════════════════
 
-var CACHE_NAME = 'quickspeak-v5-100';
+var CACHE_NAME = 'quickspeak-v5-101';
 
 var ASSETS = [
   './',
