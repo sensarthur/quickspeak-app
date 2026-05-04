@@ -179,6 +179,67 @@
     .ble-dot.on { background:var(--green); box-shadow:0 0 8px var(--green); }
     .ble-toast { position:fixed; top:60px; left:50%; transform:translateX(-50%); z-index:600; background:var(--surface); border:1.5px solid #2a2a3a; border-radius:12px; padding:10px 16px; font-size:.78em; font-weight:700; color:var(--text); box-shadow:0 4px 24px rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .25s; max-width:80%; text-align:center; }
     .ble-toast.on { opacity:1; }
+
+    /* ── Écran de repos ── */
+    #idleView { background:#000; align-items:center; justify-content:center; padding:40px 30px; text-align:center; gap:18px; }
+    #idleView .idle-photo { width:120px; height:120px; border-radius:50%; background:var(--card); border:2px solid rgba(56,189,248,.3); object-fit:cover; display:flex; align-items:center; justify-content:center; font-size:3.5em; overflow:hidden; flex-shrink:0; }
+    #idleView .idle-photo img { width:100%; height:100%; object-fit:cover; display:block; }
+    #idleView .idle-name { font-size:2em; font-weight:900; color:var(--text); letter-spacing:-0.03em; margin:0; line-height:1; }
+    #idleView .idle-msg { font-size:.95em; color:var(--text2); font-weight:500; line-height:1.5; max-width:320px; margin:0; }
+    #idleView .idle-divider { width:60%; max-width:200px; height:1px; background:#252530; margin:8px 0; }
+    #idleView .idle-contact-label { font-size:.65em; color:#5a5d70; font-weight:700; letter-spacing:2px; }
+    #idleView .idle-contact-name { font-size:1em; font-weight:700; color:var(--text); }
+    #idleView .idle-phone { display:inline-block; padding:10px 22px; border-radius:18px; background:var(--card); border:1.5px solid rgba(56,189,248,.4); color:var(--accent); font-size:1em; font-weight:800; text-decoration:none; }
+    #idleView .idle-phone:active { transform:scale(.96); }
+    #idleView .idle-ble { display:flex; align-items:center; gap:6px; opacity:.5; margin-top:8px; }
+    #idleView .idle-ble-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 6px var(--accent); animation:sbPulse 2s ease-in-out infinite; }
+    #idleView .idle-ble-dot.off { background:#3a3a4a; box-shadow:none; animation:none; }
+    #idleView .idle-ble-txt { font-size:.62em; color:#5a5d70; font-weight:700; letter-spacing:1.5px; }
+    #idleView .idle-hint { position:absolute; bottom:28px; left:50%; transform:translateX(-50%); font-size:.7em; color:#3a3d50; font-weight:600; letter-spacing:.5px; }
+    #idleView.fade-out { animation:idleFadeOut .35s ease-out forwards; }
+    #idleView.fade-in { animation:idleFadeIn .45s ease-out; }
+    @keyframes idleFadeOut { to{opacity:0;} }
+    @keyframes idleFadeIn { from{opacity:0;} to{opacity:1;} }
+
+    /* ── Mode Radio ── */
+    #radioView { align-items:center; justify-content:center; padding:30px 24px; gap:18px; text-align:center; }
+    .radio-art { width:180px; height:180px; border-radius:24px; background:linear-gradient(145deg,var(--card),#1a1a30); border:2.5px solid #252535; display:flex; align-items:center; justify-content:center; font-size:5em; box-shadow:0 8px 30px rgba(0,0,0,.4); transition:all .3s; position:relative; }
+    .radio-art.playing { border-color:var(--accent); box-shadow:0 0 30px var(--accent-glow); }
+    .radio-art .eq { position:absolute; bottom:14px; left:50%; transform:translateX(-50%); display:flex; gap:3px; align-items:flex-end; height:18px; opacity:0; transition:opacity .3s; }
+    .radio-art.playing .eq { opacity:.85; }
+    .radio-art .eq span { width:3px; background:var(--accent); border-radius:2px; animation:eqBar 1.1s ease-in-out infinite; }
+    .radio-art .eq span:nth-child(1){animation-delay:0s; height:30%;}
+    .radio-art .eq span:nth-child(2){animation-delay:.15s; height:60%;}
+    .radio-art .eq span:nth-child(3){animation-delay:.3s; height:100%;}
+    .radio-art .eq span:nth-child(4){animation-delay:.45s; height:50%;}
+    .radio-art .eq span:nth-child(5){animation-delay:.6s; height:80%;}
+    @keyframes eqBar { 0%,100%{transform:scaleY(.4);} 50%{transform:scaleY(1);} }
+    .radio-name { font-size:1.6em; font-weight:900; color:var(--text); letter-spacing:-0.02em; margin:0; line-height:1.2; min-height:1.2em; }
+    .radio-status { font-size:.78em; color:var(--text2); font-weight:700; letter-spacing:1px; min-height:1em; }
+    .radio-status.live { color:var(--green); }
+    .radio-status.error { color:var(--red); }
+    .radio-counter { font-size:.7em; color:#5a5d70; font-weight:700; letter-spacing:1px; }
+
+    /* ── Section profil & repos dans réglages ── */
+    .profile-photo-wrap { display:flex; align-items:center; gap:14px; }
+    .profile-photo-preview { width:72px; height:72px; border-radius:50%; background:var(--card); border:2px solid #252535; display:flex; align-items:center; justify-content:center; font-size:2em; overflow:hidden; flex-shrink:0; }
+    .profile-photo-preview img { width:100%; height:100%; object-fit:cover; display:block; }
+    .photo-buttons { display:flex; flex-direction:column; gap:6px; flex:1; }
+    .photo-btn { background:var(--surface); border:1.5px solid #2a2a3a; border-radius:10px; padding:8px 12px; font-family:inherit; font-size:.8em; font-weight:700; color:var(--text); cursor:pointer; }
+    .photo-btn.danger { color:var(--red); border-color:rgba(248,113,113,.3); }
+    .s-textarea { background:#0c0c18; border:1.5px solid #252545; border-radius:10px; padding:10px 12px; color:var(--text); font-family:inherit; font-size:.85em; width:100%; min-height:70px; resize:vertical; line-height:1.4; }
+    .s-textarea:focus { outline:none; border-color:var(--accent); }
+
+    /* ── Liste radios dans réglages ── */
+    .r-item { display:flex; align-items:center; gap:10px; padding:11px 14px; background:var(--surface); border-radius:14px; margin-bottom:7px; }
+    .r-item .r-em { font-size:1.4em; flex-shrink:0; }
+    .r-item .r-info { flex:1; min-width:0; }
+    .r-item .r-name { font-weight:700; font-size:.92em; }
+    .r-item .r-url { font-size:.7em; color:var(--text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .r-item .r-actions { display:flex; gap:4px; flex-shrink:0; }
+    .r-item .r-btn { background:none; border:none; color:var(--text2); font-size:1em; cursor:pointer; padding:4px 6px; border-radius:6px; }
+    .r-item .r-btn:active { background:#1e1e2e; }
+    .r-item .r-btn.del { color:var(--red); }
   </style>
 </head>
 <body>
@@ -189,6 +250,24 @@
   <div class="sos-ring"><div class="sos-ring-fill" id="sosRingFill"></div><div class="sos-ring-ico">🆘</div></div>
   <div class="sos-charge-txt">SOS en cours...</div>
   <div class="sos-charge-sub">Relâchez pour annuler</div>
+</div>
+
+<!-- Player audio (caché, contrôlé en JS) -->
+<!-- Pas de crossorigin : les flux radio publics ne renvoient pas les en-têtes CORS et seraient bloqués -->
+<audio id="radioAudio" preload="none"></audio>
+
+<!-- IDLE (écran de repos) -->
+<div class="view" id="idleView">
+  <button class="gear-btn" onclick="openOv()" style="position:absolute;top:calc(env(safe-area-inset-top) + 10px);right:14px;opacity:.45">⚙️</button>
+  <div class="idle-photo" id="idlePhoto">👤</div>
+  <h1 class="idle-name" id="idleName">QuickSpeak</h1>
+  <p class="idle-msg" id="idleMsg">Je communique avec ce téléphone.<br>Appuyez sur le bouton bleu pour engager la conversation.</p>
+  <div class="idle-divider" id="idleDivider"></div>
+  <div class="idle-contact-label" id="idleContactLbl">CONTACT D'URGENCE</div>
+  <div class="idle-contact-name" id="idleContactName"></div>
+  <a class="idle-phone" id="idlePhoneLink" href="#"><span id="idlePhoneTxt"></span></a>
+  <div class="idle-ble"><span class="idle-ble-dot" id="idleBleDot"></span><span class="idle-ble-txt" id="idleBleTxt">BLE PRÊT</span></div>
+  <div class="idle-hint">Appui court sur le bouton : démarrer le scan</div>
 </div>
 
 <!-- DOCK -->
@@ -233,6 +312,35 @@
   </div>
 </div>
 
+<!-- RADIO -->
+<div class="view" id="radioView">
+  <div class="header">
+    <div class="logo"><span>📻</span> Radios</div>
+    <div class="header-right">
+      <button class="gear-btn" onclick="openOv()">⚙️</button>
+      <button class="ble-dot" onclick="bleClick()" title="État BLE"></button>
+    </div>
+  </div>
+  <div class="crumb"><span class="back" onclick="goHome()">Accueil</span> › <b>Radio</b></div>
+  <div class="stage" id="radioStage">
+    <div class="ghost ghost-l"></div>
+    <div class="radio-art" id="radioArt" onclick="nextRadio()">
+      <div style="font-size:1em" id="radioEmoji">📻</div>
+      <div class="eq"><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+    <div class="ghost ghost-r"></div>
+  </div>
+  <h2 class="radio-name" id="radioName">—</h2>
+  <div class="radio-status" id="radioStatus">EN PAUSE</div>
+  <div class="radio-counter" id="radioCounter"></div>
+  <div class="actions">
+    <button class="btn" onclick="goHome()">🏠</button>
+    <button class="btn" onclick="prevRadio()">◀</button>
+    <button class="btn big" onclick="nextRadio()">📻 Suivante</button>
+    <button class="btn" onclick="stopRadio()">⏹</button>
+  </div>
+</div>
+
 <!-- SOS -->
 <div class="view" id="sosView">
   <div class="sos-beacon">🆘</div>
@@ -247,11 +355,13 @@
 <div class="overlay" id="ov">
   <button class="ov-close" onclick="closeOv()">✕</button>
   <h2>⚙️ Réglages</h2>
-  <div class="ov-tabs">
+  <div class="ov-tabs" style="flex-wrap:wrap">
     <button class="ov-tab on" onclick="setTab(0)">📝 Phrases</button>
-    <button class="ov-tab" onclick="setTab(1)">🎛 Scan</button>
-    <button class="ov-tab" onclick="setTab(2)">🆘 SOS</button>
-    <button class="ov-tab" onclick="setTab(3)">🔵 BLE</button>
+    <button class="ov-tab" onclick="setTab(1)">📻 Radios</button>
+    <button class="ov-tab" onclick="setTab(2)">👤 Profil</button>
+    <button class="ov-tab" onclick="setTab(3)">🎛 Scan</button>
+    <button class="ov-tab" onclick="setTab(4)">🆘 SOS</button>
+    <button class="ov-tab" onclick="setTab(5)">🔵 BLE</button>
   </div>
   <div class="tab-pane on" id="tp0">
     <div class="cats" id="ovCats" style="padding-left:0"></div>
@@ -267,14 +377,55 @@
   </div>
   <div class="tab-pane" id="tp1">
     <div class="s-box">
-      <div class="s-row"><div><div class="s-label">Mode scan</div><div class="s-sub">Défilement auto + bouton unique</div></div><div class="tog" id="togScan" onclick="S.scanOn=!S.scanOn;this.classList.toggle('on',S.scanOn);saveS()"></div></div>
+      <div class="s-label">Radios web</div>
+      <div class="s-sub" style="margin-bottom:6px">L'utilisateur entre dans la catégorie Radios depuis l'accueil. Un appui court change de station, un appui long arrête et revient au repos.</div>
+    </div>
+    <div id="radioList"></div>
+    <div class="add-box">
+      <input id="rIcon" placeholder="Emoji (ex: 📻)" maxlength="4">
+      <input id="rName" placeholder="Nom de la radio">
+      <input id="rUrl" placeholder="URL du flux (https://...)">
+      <button class="btn big" onclick="addRadio()" style="justify-content:center;width:100%">➕ Ajouter une radio</button>
+    </div>
+    <button class="btn" onclick="resetRadios()" style="color:var(--orange);width:100%;justify-content:center;margin-top:14px">🔄 Restaurer la liste par défaut</button>
+  </div>
+  <div class="tab-pane" id="tp2">
+    <div class="s-box">
+      <div class="s-label">Profil utilisateur</div>
+      <div class="s-sub" style="margin-bottom:10px">Affiché sur l'écran de repos et utilisé par le SOS. Les infos restent stockées localement sur le téléphone.</div>
+      <div class="profile-photo-wrap" style="margin-bottom:12px">
+        <div class="profile-photo-preview" id="profilePhotoPrev">👤</div>
+        <div class="photo-buttons">
+          <label class="photo-btn" style="text-align:center">📷 Choisir une photo
+            <input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="onProfilePhoto(event)">
+          </label>
+          <button class="photo-btn danger" onclick="clearProfilePhoto()">🗑 Retirer</button>
+        </div>
+      </div>
+      <div style="margin-bottom:8px"><div class="s-label">Prénom</div><input class="s-input" id="iUserName" placeholder="Ex: Arthur" oninput="S.userName=this.value;saveS();renderIdleStatic();renderProfilePreview()"></div>
+      <div style="margin-bottom:8px"><div class="s-label">Nom du contact</div><input class="s-input" id="iSosName" placeholder="Ex: Maman" oninput="S.sosName=this.value;saveS();renderIdleStatic()"></div>
+      <div><div class="s-label">Téléphone du contact</div><input class="s-input" id="iSosPhone" type="tel" placeholder="06 01 02 03 04" oninput="S.sosPhone=this.value;saveS();renderIdleStatic()"></div>
+    </div>
+    <div class="s-box">
+      <div class="s-label">Écran de repos</div>
+      <div class="s-sub" style="margin-bottom:6px">Quand le scan est inactif, l'écran affiche le profil + un message + le contact. Économe en énergie sur OLED.</div>
+      <div class="s-row"><div><div class="s-label">Activer l'écran de repos</div><div class="s-sub">Sinon le dock reste affiché</div></div><div class="tog" id="togIdle" onclick="S.idleEnabled=!S.idleEnabled;this.classList.toggle('on',S.idleEnabled);saveS()"></div></div>
+      <div class="s-row"><div><div class="s-label">Afficher le contact d'urgence</div><div class="s-sub">Nom + téléphone visible au repos</div></div><div class="tog" id="togIdleContact" onclick="S.idleShowContact=!S.idleShowContact;this.classList.toggle('on',S.idleShowContact);saveS();renderIdleStatic()"></div></div>
+      <div style="margin-top:10px"><div class="s-label">Message affiché</div><textarea class="s-textarea" id="iIdleMsg" placeholder="Ex: Je communique avec ce téléphone..." oninput="S.idleMessage=this.value;saveS();renderIdleStatic()"></textarea></div>
+    </div>
+  </div>
+  <div class="tab-pane" id="tp3">
+    <div class="s-box">
+      <div class="s-label">Fonctionnement du scan</div>
+      <div class="s-sub" style="margin-bottom:6px">L'appui court démarre le scan. Les appuis suivants sélectionnent la case surlignée. Sans sélection au bout de N cycles, retour automatique au repos.</div>
       <div class="s-row"><div style="flex:1"><div class="s-label">Vitesse</div><input type="range" class="s-range" id="rSpeed" min="800" max="5000" step="200" oninput="S.scanSpeed=+this.value;document.getElementById('vSpeed').textContent=(S.scanSpeed/1000).toFixed(1)+'s';saveS()"></div><div class="s-val" id="vSpeed">2.0s</div></div>
       <div class="s-row"><div style="flex:1"><div class="s-label">Pause après parole</div><input type="range" class="s-range" id="rPause" min="1000" max="8000" step="500" oninput="S.pauseAfter=+this.value;document.getElementById('vPause').textContent=(S.pauseAfter/1000).toFixed(1)+'s';saveS()"></div><div class="s-val" id="vPause">3.0s</div></div>
       <div class="s-row"><div style="flex:1"><div class="s-label">Anti-rebond</div><div class="s-sub">Ignore les clics trop rapprochés (tremblements)</div><input type="range" class="s-range" id="rDebounce" min="0" max="1000" step="50" oninput="S.debounceMs=+this.value;document.getElementById('vDebounce').textContent=S.debounceMs+' ms';saveS()"></div><div class="s-val" id="vDebounce">300 ms</div></div>
-      <div class="s-row"><div style="flex:1"><div class="s-label">Arrêt auto du scan</div><div class="s-sub">Cycles complets sans sélection avant arrêt</div><input type="range" class="s-range" id="rCycles" min="1" max="8" step="1" oninput="S.scanMaxCycles=+this.value;document.getElementById('vCycles').textContent=S.scanMaxCycles+' cycles';saveS();updateScanBadge()"></div><div class="s-val" id="vCycles">3 cycles</div></div>
+      <div class="s-row"><div style="flex:1"><div class="s-label">Arrêt auto du scan</div><div class="s-sub">Cycles complets sans sélection avant retour au repos</div><input type="range" class="s-range" id="rCycles" min="1" max="8" step="1" oninput="S.scanMaxCycles=+this.value;document.getElementById('vCycles').textContent=S.scanMaxCycles+' cycles';saveS();updateScanBadge()"></div><div class="s-val" id="vCycles">3 cycles</div></div>
+      <div class="s-row"><div><div class="s-label">Barre de progression</div><div class="s-sub">Animation en haut (peut fatiguer les yeux)</div></div><div class="tog" id="togBar" onclick="S.showScanBar=!S.showScanBar;this.classList.toggle('on',S.showScanBar);saveS()"></div></div>
     </div>
   </div>
-  <div class="tab-pane" id="tp2">
+  <div class="tab-pane" id="tp4">
     <div class="s-box">
       <div class="s-label">Mode de déclenchement</div>
       <div class="s-sub" style="margin-bottom:6px">Comment l'utilisateur déclenche le SOS depuis le bouton</div>
@@ -288,16 +439,15 @@
       <div class="s-sub" style="margin-top:6px">5 s après déclenchement, un appui court annule. Au-delà, refaire la même séquence pour arrêter.</div>
     </div>
     <div class="s-box">
-      <div style="margin-bottom:8px"><div class="s-label">Nom du contact</div><input class="s-input" id="iSosName" placeholder="Ex: Maman" oninput="S.sosName=this.value;saveS()"></div>
-      <div style="margin-bottom:8px"><div class="s-label">Téléphone</div><input class="s-input" id="iSosPhone" type="tel" placeholder="06 01 02 03 04" oninput="S.sosPhone=this.value;saveS()"></div>
-      <div><div class="s-label">Message passants</div><input class="s-input" id="iSosMsg" placeholder="Bonjour, j'ai besoin d'aide." oninput="S.sosMsg=this.value;saveS()"></div>
+      <div class="s-sub" style="margin-bottom:8px">ℹ️ Le nom et le téléphone du contact sont définis dans l'onglet <b>Profil</b> (utilisés ici aussi).</div>
+      <div><div class="s-label">Message diffusé aux passants</div><input class="s-input" id="iSosMsg" placeholder="Bonjour, j'ai besoin d'aide." oninput="S.sosMsg=this.value;saveS()"></div>
     </div>
     <div class="s-box">
       <div class="s-row"><div><div class="s-label">Voix en boucle</div><div class="s-sub">Répète le message</div></div><div class="tog on" id="togSosV" onclick="S.sosVoice=!S.sosVoice;this.classList.toggle('on',S.sosVoice);saveS()"></div></div>
       <div class="s-row"><div><div class="s-label">SMS + GPS</div><div class="s-sub">SMS auto au contact</div></div><div class="tog on" id="togSosSms" onclick="S.sosSms=!S.sosSms;this.classList.toggle('on',S.sosSms);saveS()"></div></div>
     </div>
   </div>
-  <div class="tab-pane" id="tp3">
+  <div class="tab-pane" id="tp5">
     <div class="s-box">
       <div class="s-label">Logique du bouton</div>
       <div class="s-sub" style="margin-bottom:8px">Court = valider · Long = retour · Très long = SOS</div>
@@ -329,15 +479,43 @@ var DEFAULTS=[
   {icon:"🆘",label:"Aide !",cat:"Urgence"},{icon:"🏥",label:"Appeler un médecin",cat:"Urgence"},{icon:"📞",label:"Appeler quelqu'un",cat:"Urgence"},{icon:"⚠️",label:"Danger",cat:"Urgence"}
 ];
 var CAT_ICONS={"Basique":"💬","Besoins":"🫶","Social":"😊","Déplacement":"🚀","Urgence":"🚨"};
-var phrases,cats,ci=0,idx=0,busy=false,curView='dock',scanTmr=null,scanIdx=0,sosOn=false,sosVTmr=null,ovOpen=false;
-var S={scanOn:false,scanSpeed:2000,pauseAfter:3000,sosName:'',sosPhone:'',sosMsg:'Bonjour, j\'ai besoin d\'aide.\nMerci d\'appeler le numéro ci-dessous.',sosDur:3000,sosVoice:true,sosSms:true,longPress:800,sosPress:3000,backMode:'parent',sosTrigger:'off',sosGraceMs:5000,debounceMs:300,scanMaxCycles:3};
+var phrases,cats,radios,ci=0,idx=0,radioIdx=0,busy=false,curView='idle',scanTmr=null,scanIdx=0,sosOn=false,sosVTmr=null,ovOpen=false;
+var S={
+  scanSpeed:2000,pauseAfter:3000,
+  sosName:'',sosPhone:'',sosMsg:'Bonjour, j\'ai besoin d\'aide.\nMerci d\'appeler le numéro ci-dessous.',sosDur:3000,sosVoice:true,sosSms:true,
+  longPress:800,sosPress:3000,backMode:'parent',sosTrigger:'off',sosGraceMs:5000,debounceMs:300,scanMaxCycles:3,showScanBar:false,
+  // Profil & écran de repos
+  userName:'',userPhoto:'',idleEnabled:true,idleShowContact:true,
+  idleMessage:'Je communique avec ce téléphone.\nAppuyez sur le bouton bleu pour engager la conversation.'
+};
 var scanCycle=0;     // cycle courant (1..scanMaxCycles) pendant un scan
 var scanCardCount=0; // nombre d'éléments dans le cycle en cours
 
+// Radios par défaut (flux HTTPS, accessibles depuis un <audio>)
+var DEFAULT_RADIOS=[
+  {icon:'📻',name:'France Inter',url:'https://icecast.radiofrance.fr/franceinter-hifi.aac'},
+  {icon:'📰',name:'France Info',url:'https://icecast.radiofrance.fr/franceinfo-hifi.aac'},
+  {icon:'🎭',name:'France Culture',url:'https://icecast.radiofrance.fr/franceculture-hifi.aac'},
+  {icon:'🎼',name:'France Musique',url:'https://icecast.radiofrance.fr/francemusique-hifi.aac'},
+  {icon:'🎶',name:'FIP',url:'https://icecast.radiofrance.fr/fip-hifi.aac'},
+  {icon:'🏔️',name:'ICI Alsace',url:'https://icecast.radiofrance.fr/fbalsace-hifi.aac'},
+  {icon:'🎵',name:'Radio Nova',url:'https://novazz.ice.infomaniak.ch/novazz-128.mp3'},
+  {icon:'🎷',name:'TSF Jazz',url:'https://tsfjazz.ice.infomaniak.ch/tsfjazz-high.mp3'},
+  {icon:'🎻',name:'Radio Classique',url:'https://radioclassique.ice.infomaniak.ch/radioclassique-high.mp3'},
+  {icon:'⚡',name:'NRJ',url:'https://scdn.nrjaudio.fm/audio1/fr/30001/mp3_128.mp3'},
+  {icon:'🎧',name:'Radio FG',url:'https://radiofg.impek.com/fg.mp3'}
+];
+
 function cloneArr(a){var r=[];for(var i=0;i<a.length;i++)r.push({icon:a[i].icon,label:a[i].label,cat:a[i].cat});return r;}
+function cloneRadios(a){var r=[];for(var i=0;i<a.length;i++)r.push({icon:a[i].icon,name:a[i].name,url:a[i].url});return r;}
 function load(){
   try{var s=localStorage.getItem('qs_p');phrases=s?JSON.parse(s):cloneArr(DEFAULTS);}catch(e){phrases=cloneArr(DEFAULTS);}
   try{var s2=localStorage.getItem('qs_s');if(s2){var o=JSON.parse(s2);for(var k in o)S[k]=o[k];}}catch(e){}
+  // Migration : on ignore S.scanOn s'il a été persisté par une ancienne version
+  if('scanOn' in S)delete S.scanOn;
+  // Radios
+  try{var s4=localStorage.getItem('qs_radios');radios=s4?JSON.parse(s4):cloneRadios(DEFAULT_RADIOS);}catch(e){radios=cloneRadios(DEFAULT_RADIOS);}
+  if(!radios||!radios.length)radios=cloneRadios(DEFAULT_RADIOS);
   // Ordre des catégories : on lit qs_cats si présent, sinon on reconstruit depuis phrases
   var stored=null;
   try{var s3=localStorage.getItem('qs_cats');if(s3)stored=JSON.parse(s3);}catch(e){}
@@ -351,39 +529,67 @@ function load(){
 function saveP(){try{localStorage.setItem('qs_p',JSON.stringify(phrases));}catch(e){}}
 function saveC(){try{localStorage.setItem('qs_cats',JSON.stringify(cats));}catch(e){}}
 function saveS(){try{localStorage.setItem('qs_s',JSON.stringify(S));}catch(e){}}
+function saveRadios(){try{localStorage.setItem('qs_radios',JSON.stringify(radios));}catch(e){}}
 function filtered(){var r=[];for(var i=0;i<phrases.length;i++)if(phrases[i].cat===cats[ci])r.push(phrases[i]);return r;}
 
 // ── Views ──
 function showView(name){
   stopScan();
+  // Quitte la radio dès qu'on change de vue (sauf si c'est radio→radio, géré ailleurs)
+  if(curView==='radio'&&name!=='radio')stopRadio();
   var vv=document.querySelectorAll('.view');for(var i=0;i<vv.length;i++)vv[i].classList.remove('active');
   document.getElementById(name+'View').classList.add('active');
   curView=name;
   if(name==='dock')renderDock();
   if(name==='car')renderCar();
-  if(S.scanOn&&name!=='sos')startScan();
+  if(name==='idle')renderIdle();
+  if(name==='radio')renderRadio();
 }
+// Retour à l'écran de repos (ou dock si idle désactivé)
+function goIdle(){ci=0;idx=0;showView(S.idleEnabled?'idle':'dock');}
 function goHome(){ci=0;idx=0;showView('dock');}
 function enterCat(i){ci=i;idx=0;showView('car');}
-// Retour : depuis le carousel → dock ; depuis dock → rien (déjà au top).
-// backMode 'parent' et 'home' donnent le même résultat tant qu'on n'a qu'un niveau de profondeur ;
-// la distinction est prête pour une future arborescence plus profonde.
+// Retour : depuis le carousel → dock ; depuis dock → idle ; depuis radio → idle.
 function goBack(){
-  // 'parent' et 'home' sont équivalents tant qu'il n'y a qu'un niveau de profondeur
   if(curView==='car'){
-    if(S.backMode==='home')goHome();else showView('dock');
+    if(S.backMode==='home')goIdle();else showView('dock');
+    return;
   }
-  // dock = pas de cran au-dessus
+  if(curView==='radio'){stopRadio();goIdle();return;}
+  if(curView==='dock'){goIdle();return;}
+  // idle : pas de cran au-dessus
 }
 
 // ── Dock ──
+// Construit la liste affichée dans le dock = [catégories de phrases] + [carte spéciale Radios].
+// dockEntries() est l'unique source de vérité pour le scan : il scanne tous les éléments
+// rendus dans le dock, dans l'ordre exact d'affichage.
+function dockEntries(){
+  var arr=[];
+  for(var i=0;i<cats.length;i++)arr.push({type:'cat',catIdx:i,name:cats[i]});
+  if(radios&&radios.length)arr.push({type:'radio',name:'Radios'});
+  return arr;
+}
+function enterDockEntry(i){
+  var e=dockEntries()[i];
+  if(!e)return;
+  if(e.type==='radio')enterRadio();
+  else{ci=e.catIdx;idx=0;showView('car');}
+}
 function renderDock(){
   var h='';
-  for(var i=0;i<cats.length;i++){
-    var c=cats[i],cnt=0;for(var j=0;j<phrases.length;j++)if(phrases[j].cat===c)cnt++;
-    var ico=CAT_ICONS[c]||'📁';
-    h+='<div class="dock-card" id="dc'+i+'" onclick="enterCat('+i+')">';
-    h+='<div class="d-ico">'+ico+'</div><div class="d-lbl">'+c+'</div><div class="d-cnt">'+cnt+' phrases</div></div>';
+  var entries=dockEntries();
+  for(var i=0;i<entries.length;i++){
+    var e=entries[i];
+    if(e.type==='radio'){
+      h+='<div class="dock-card" id="dc'+i+'" onclick="enterDockEntry('+i+')">';
+      h+='<div class="d-ico">📻</div><div class="d-lbl">Radios</div><div class="d-cnt">'+radios.length+' stations</div></div>';
+    }else{
+      var c=e.name,cnt=0;for(var j=0;j<phrases.length;j++)if(phrases[j].cat===c)cnt++;
+      var ico=CAT_ICONS[c]||'📁';
+      h+='<div class="dock-card" id="dc'+i+'" onclick="enterDockEntry('+i+')">';
+      h+='<div class="d-ico">'+ico+'</div><div class="d-lbl">'+c+'</div><div class="d-cnt">'+cnt+' phrases</div></div>';
+    }
   }
   document.getElementById('dockGrid').innerHTML=h;
 }
@@ -424,55 +630,64 @@ function speak(){
   if(fr)u.voice=fr;
   u.onend=u.onerror=function(){
     busy=false;card.classList.remove('glow');
-    if(S.scanOn&&curView==='car'){stopScan();setTimeout(function(){if(S.scanOn&&curView==='car')startScan();},S.pauseAfter);}
+    // Après la parole, on relance un scan si on était dans le carrousel
+    // (continuation naturelle pour enchaîner plusieurs phrases).
+    if(curView==='car')setTimeout(function(){if(curView==='car'&&!ovOpen)startScan();},S.pauseAfter);
   };
   speechSynthesis.cancel();speechSynthesis.speak(u);
-  if(S.scanOn)stopScan();
+  stopScan();
 }
 speechSynthesis.getVoices();
 if(speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=function(){speechSynthesis.getVoices();};
 
 // ── Scan ──
-// startScan() est maintenant appelable à la demande : hors mode scan permanent,
-// un appui court lance un scan "one-shot" qui s'arrête tout seul après
-// S.scanMaxCycles cycles complets sans sélection.
+// Le scan est le mode unique de navigation. Il n'y a plus de "mode scan permanent" :
+// chaque scan est lancé à la demande par un appui court depuis idle ou dock,
+// et s'arrête tout seul après S.scanMaxCycles cycles complets sans sélection,
+// retournant à l'écran de repos (ou au dock si l'idle est désactivé).
+// La radio n'utilise PAS le scan (navigation linéaire).
 function updateScanBadge(){
   var bc=document.getElementById('scanBadgeCount');
   if(bc)bc.textContent=(scanCycle||1)+'/'+S.scanMaxCycles;
 }
 function startScan(){
+  if(curView!=='dock'&&curView!=='car')return;  // Pas de scan en idle, radio, sos
   stopScan();
   scanCycle=1;
   document.getElementById('scanBadge').classList.add('on');
   updateScanBadge();
   var bar=document.getElementById(curView==='dock'?'dockBar':'carBar');
   var fill=document.getElementById(curView==='dock'?'dockFill':'carFill');
-  bar.classList.add('on');
+  if(S.showScanBar)bar.classList.add('on');
   // Nombre d'éléments à parcourir pour un cycle complet
   if(curView==='dock'){scanCardCount=document.querySelectorAll('.dock-card').length;}
   else if(curView==='car'){var f=filtered();scanCardCount=f.length+1;}
   else{scanCardCount=1;}
   function tick(){
-    fill.style.transition='none';fill.style.width='0%';void fill.offsetWidth;
-    fill.style.transition='width '+S.scanSpeed+'ms linear';fill.style.width='100%';
+    if(S.showScanBar){
+      fill.style.transition='none';fill.style.width='0%';void fill.offsetWidth;
+      fill.style.transition='width '+S.scanSpeed+'ms linear';fill.style.width='100%';
+    }
     scanTmr=setTimeout(function(){
       var wrapped=false;
       if(curView==='dock'){
         var cards=document.querySelectorAll('.dock-card');
-        if(!cards.length){stopScan();return;}
+        if(!cards.length){stopScan();goIdle();return;}
         for(var i=0;i<cards.length;i++)cards[i].classList.remove('scan-hi');
+        var prev=scanIdx;
         scanIdx=(scanIdx+1)%cards.length;
-        if(scanIdx===0)wrapped=true;
+        if(prev===cards.length-1&&scanIdx===0)wrapped=true;
         cards[scanIdx].classList.add('scan-hi');
       }else if(curView==='car'){
+        var prevIdx=idx;
         go(1);
-        if(idx===0)wrapped=true;
+        var total=filtered().length+1;
+        if(prevIdx===total-1&&idx===0)wrapped=true;
       }
       if(wrapped){
         scanCycle++;
-        // Timeout auto uniquement hors mode scan permanent
-        if(!S.scanOn&&scanCycle>S.scanMaxCycles){stopScan();return;}
-        if(scanCycle>S.scanMaxCycles)scanCycle=1;
+        // Cycles épuisés → retour automatique à l'écran de repos
+        if(scanCycle>S.scanMaxCycles){stopScan();goIdle();return;}
         updateScanBadge();
       }
       tick();
@@ -490,14 +705,111 @@ function stopScan(){
 }
 function scanSelect(){
   if(curView==='dock'){
-    // Valider la catégorie surlignée (ou la première si aucune)
-    var i=(scanIdx>=0&&scanIdx<cats.length)?scanIdx:0;
-    enterCat(i);
+    var entries=dockEntries();
+    var i=(scanIdx>=0&&scanIdx<entries.length)?scanIdx:0;
+    enterDockEntry(i);
   }
   else if(curView==='car'){
-    // Valider = parler la phrase affichée
+    // Valider = parler la phrase affichée (ou retour si carte "retour")
     speak();
   }
+}
+
+// ── Écran de repos ──
+// L'écran de repos est l'état "neutre" de l'app : pas de scan, juste une carte
+// d'identification (photo, prénom, message, contact) sur fond noir. Sert aussi
+// d'écran d'urgence informatif si quelqu'un trouve le téléphone.
+function renderIdle(){renderIdleStatic();}
+function renderIdleStatic(){
+  // Photo
+  var ph=document.getElementById('idlePhoto');
+  if(ph){
+    if(S.userPhoto){ph.innerHTML='<img src="'+S.userPhoto+'" alt="">';}
+    else{ph.textContent='👤';}
+  }
+  // Prénom
+  var nm=document.getElementById('idleName');
+  if(nm)nm.textContent=S.userName||'QuickSpeak';
+  // Message
+  var msg=document.getElementById('idleMsg');
+  if(msg)msg.innerHTML=(S.idleMessage||'').replace(/\n/g,'<br>')||'Appuyez sur le bouton bleu pour engager la conversation.';
+  // Contact
+  var showC=S.idleShowContact&&(S.sosName||S.sosPhone);
+  var div=document.getElementById('idleDivider');
+  var lbl=document.getElementById('idleContactLbl');
+  var cnm=document.getElementById('idleContactName');
+  var lnk=document.getElementById('idlePhoneLink');
+  var ptx=document.getElementById('idlePhoneTxt');
+  if(div)div.style.display=showC?'':'none';
+  if(lbl)lbl.style.display=showC?'':'none';
+  if(cnm){cnm.textContent=S.sosName||'';cnm.style.display=(showC&&S.sosName)?'':'none';}
+  if(lnk){
+    if(showC&&S.sosPhone){
+      lnk.style.display='';
+      lnk.href='tel:'+S.sosPhone.replace(/\s/g,'');
+      ptx.textContent=S.sosPhone;
+    }else{lnk.style.display='none';}
+  }
+}
+
+// ── Radio ──
+var radioAudio=null,radioPlayState='idle';
+function ensureAudio(){
+  if(!radioAudio){
+    radioAudio=document.getElementById('radioAudio');
+    if(radioAudio){
+      radioAudio.addEventListener('playing',function(){setRadioStatus('live','● EN DIRECT');});
+      radioAudio.addEventListener('waiting',function(){setRadioStatus('','CHARGEMENT...');});
+      radioAudio.addEventListener('error',function(){setRadioStatus('error','✕ FLUX INDISPONIBLE');});
+      radioAudio.addEventListener('stalled',function(){setRadioStatus('','RECONNEXION...');});
+    }
+  }
+  return radioAudio;
+}
+function setRadioStatus(cls,text){
+  var s=document.getElementById('radioStatus');
+  if(!s)return;
+  s.className='radio-status'+(cls?' '+cls:'');
+  s.textContent=text;
+}
+function enterRadio(){
+  if(!radios||!radios.length){alert('Aucune radio configurée. Ajoutez-en dans Réglages → Radios.');return;}
+  if(radioIdx>=radios.length)radioIdx=0;
+  showView('radio');
+  playRadio(radioIdx);
+}
+function renderRadio(){
+  if(!radios||!radios.length)return;
+  if(radioIdx>=radios.length)radioIdx=0;
+  var r=radios[radioIdx];
+  var em=document.getElementById('radioEmoji');if(em)em.textContent=r.icon||'📻';
+  var nm=document.getElementById('radioName');if(nm)nm.textContent=r.name||'—';
+  var ct=document.getElementById('radioCounter');if(ct)ct.textContent=(radioIdx+1)+' / '+radios.length;
+}
+function playRadio(i){
+  if(!radios||!radios.length)return;
+  radioIdx=((i%radios.length)+radios.length)%radios.length;
+  var r=radios[radioIdx];
+  renderRadio();
+  var a=ensureAudio();if(!a)return;
+  setRadioStatus('','CHARGEMENT...');
+  document.getElementById('radioArt').classList.add('playing');
+  try{
+    a.pause();
+    a.src=r.url;
+    a.load();
+    var p=a.play();
+    if(p&&p.catch)p.catch(function(){setRadioStatus('error','✕ Lecture refusée');});
+  }catch(e){setRadioStatus('error','✕ Erreur');}
+}
+function nextRadio(){if(curView!=='radio')return;playRadio(radioIdx+1);}
+function prevRadio(){if(curView!=='radio')return;playRadio(radioIdx-1);}
+function stopRadio(){
+  var a=ensureAudio();
+  if(a){try{a.pause();a.removeAttribute('src');a.load();}catch(e){}}
+  var art=document.getElementById('radioArt');if(art)art.classList.remove('playing');
+  setRadioStatus('','EN PAUSE');
+  radioPlayState='idle';
 }
 
 // ── SOS ──
@@ -546,28 +858,86 @@ function endSOS(){sosOn=false;speechSynthesis.cancel();clearTimeout(sosVTmr);sho
 
 // ── Settings ──
 function openOv(){stopScan();ovOpen=true;document.getElementById('ov').classList.add('open');renderOv();}
-function closeOv(){ovOpen=false;document.getElementById('ov').classList.remove('open');load();if(curView==='car'){idx=0;showView('car');}else showView('dock');}
+function closeOv(){
+  ovOpen=false;document.getElementById('ov').classList.remove('open');load();
+  // Au retour des réglages, on retourne là où l'utilisateur était
+  if(curView==='car'){idx=0;showView('car');}
+  else if(curView==='radio'){renderRadio();}
+  else if(curView==='idle'){showView('idle');}
+  else showView('dock');
+}
 function setTab(n){
   var tt=document.querySelectorAll('.ov-tab'),pp=document.querySelectorAll('.tab-pane');
   for(var i=0;i<tt.length;i++){tt[i].classList.remove('on');pp[i].classList.remove('on');}
   tt[n].classList.add('on');pp[n].classList.add('on');
   if(n===0)renderEditor();
+  if(n===1)renderRadioEditor();
+  if(n===2)renderProfilePreview();
 }
 function renderOv(){
-  document.getElementById('togScan').classList.toggle('on',S.scanOn);
   document.getElementById('rSpeed').value=S.scanSpeed;document.getElementById('vSpeed').textContent=(S.scanSpeed/1000).toFixed(1)+'s';
   document.getElementById('rPause').value=S.pauseAfter;document.getElementById('vPause').textContent=(S.pauseAfter/1000).toFixed(1)+'s';
   var rd=document.getElementById('rDebounce');if(rd){rd.value=S.debounceMs;document.getElementById('vDebounce').textContent=S.debounceMs+' ms';}
   var rc=document.getElementById('rCycles');if(rc){rc.value=S.scanMaxCycles;document.getElementById('vCycles').textContent=S.scanMaxCycles+' cycles';}
+  var tb=document.getElementById('togBar');if(tb)tb.classList.toggle('on',!!S.showScanBar);
   var st=document.getElementById('iSosTrigger');if(st)st.value=S.sosTrigger||'off';
-  document.getElementById('iSosName').value=S.sosName;document.getElementById('iSosPhone').value=S.sosPhone;document.getElementById('iSosMsg').value=S.sosMsg;
+  // Profil (partagé avec SOS pour nom/téléphone)
+  var iun=document.getElementById('iUserName');if(iun)iun.value=S.userName||'';
+  document.getElementById('iSosName').value=S.sosName||'';
+  document.getElementById('iSosPhone').value=S.sosPhone||'';
+  document.getElementById('iSosMsg').value=S.sosMsg||'';
+  // Écran de repos
+  var ti=document.getElementById('togIdle');if(ti)ti.classList.toggle('on',!!S.idleEnabled);
+  var tic=document.getElementById('togIdleContact');if(tic)tic.classList.toggle('on',!!S.idleShowContact);
+  var im=document.getElementById('iIdleMsg');if(im)im.value=S.idleMessage||'';
+  // SOS
   document.getElementById('togSosV').classList.toggle('on',S.sosVoice);
   document.getElementById('togSosSms').classList.toggle('on',S.sosSms);
+  // BLE
   document.getElementById('rLongPress').value=S.longPress;document.getElementById('vLongPress').textContent=(S.longPress/1000).toFixed(1)+'s';
   document.getElementById('rSosPress').value=S.sosPress;document.getElementById('vSosPress').textContent=(S.sosPress/1000).toFixed(1)+'s';
   var bm=document.getElementById('iBackMode');if(bm)bm.value=S.backMode||'parent';
   var av=document.getElementById('sAppVersion');if(av)av.textContent='QuickSpeak '+APP_VERSION;
   renderEditor();
+  renderRadioEditor();
+  renderProfilePreview();
+}
+// Profil : aperçu de la photo dans les réglages
+function renderProfilePreview(){
+  var p=document.getElementById('profilePhotoPrev');
+  if(!p)return;
+  if(S.userPhoto){p.innerHTML='<img src="'+S.userPhoto+'" alt="">';}
+  else{p.textContent='👤';}
+}
+function onProfilePhoto(ev){
+  var f=ev.target.files&&ev.target.files[0];
+  if(!f)return;
+  if(f.size>2*1024*1024){alert('Photo trop lourde (max 2 Mo). Choisis une plus petite.');ev.target.value='';return;}
+  var fr=new FileReader();
+  fr.onload=function(){
+    // Redimensionne à 256px max pour limiter la taille en localStorage
+    var img=new Image();
+    img.onload=function(){
+      var max=256,w=img.width,h=img.height;
+      if(w>h){if(w>max){h=h*max/w;w=max;}}
+      else{if(h>max){w=w*max/h;h=max;}}
+      var c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      try{
+        S.userPhoto=c.toDataURL('image/jpeg',0.85);
+        saveS();renderProfilePreview();renderIdleStatic();
+      }catch(e){alert('Impossible d\'enregistrer la photo : '+e.message);}
+    };
+    img.onerror=function(){alert('Image illisible.');};
+    img.src=fr.result;
+  };
+  fr.readAsDataURL(f);
+  ev.target.value='';
+}
+function clearProfilePhoto(){
+  if(!S.userPhoto)return;
+  if(!confirm('Retirer la photo ?'))return;
+  S.userPhoto='';saveS();renderProfilePreview();renderIdleStatic();
 }
 function renderEditor(){
   if(ci>=cats.length)ci=Math.max(0,cats.length-1);
@@ -651,6 +1021,80 @@ function addP(){
 }
 function delP(i){phrases.splice(i,1);saveP();load();if(idx>=filtered().length)idx=Math.max(0,filtered().length-1);renderEditor();}
 function resetAll(){if(!confirm('Réinitialiser ?'))return;phrases=cloneArr(DEFAULTS);try{localStorage.removeItem('qs_cats');}catch(e){}saveP();load();ci=0;idx=0;renderEditor();}
+
+// ── CRUD Radios ──
+function renderRadioEditor(){
+  var list=document.getElementById('radioList');
+  if(!list)return;
+  if(!radios||!radios.length){list.innerHTML='<div class="s-sub" style="padding:12px;text-align:center">Aucune radio. Ajoute-en une ci-dessous.</div>';return;}
+  var h='';
+  for(var i=0;i<radios.length;i++){
+    var r=radios[i];
+    h+='<div class="r-item">';
+    h+='<span class="r-em">'+(r.icon||'📻')+'</span>';
+    h+='<div class="r-info"><div class="r-name">'+escapeHtml(r.name||'(sans nom)')+'</div><div class="r-url">'+escapeHtml(r.url||'')+'</div></div>';
+    h+='<div class="r-actions">';
+    h+='<button class="r-btn" onclick="moveRadio('+i+',-1)" '+(i===0?'disabled style="opacity:.3"':'')+'>▲</button>';
+    h+='<button class="r-btn" onclick="moveRadio('+i+',1)" '+(i===radios.length-1?'disabled style="opacity:.3"':'')+'>▼</button>';
+    h+='<button class="r-btn" onclick="renameRadio('+i+')">✏️</button>';
+    h+='<button class="r-btn del" onclick="delRadio('+i+')">🗑</button>';
+    h+='</div></div>';
+  }
+  list.innerHTML=h;
+}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];});}
+function addRadio(){
+  var icon=(document.getElementById('rIcon').value||'').trim()||'📻';
+  var name=(document.getElementById('rName').value||'').trim();
+  var url=(document.getElementById('rUrl').value||'').trim();
+  if(!name||!url){alert('Renseigne au moins le nom et l\'URL du flux.');return;}
+  if(!/^https?:\/\//i.test(url)){alert('L\'URL doit commencer par http:// ou https://.');return;}
+  if(/^http:/i.test(url)&&location.protocol==='https:'){
+    if(!confirm('⚠️ Ce flux est en HTTP : il sera bloqué si la PWA est servie en HTTPS. Continuer quand même ?'))return;
+  }
+  radios.push({icon:icon,name:name,url:url});
+  saveRadios();
+  document.getElementById('rIcon').value='';
+  document.getElementById('rName').value='';
+  document.getElementById('rUrl').value='';
+  renderRadioEditor();
+  if(curView==='dock')renderDock();
+}
+function delRadio(i){
+  if(!confirm('Supprimer « '+(radios[i].name||'?')+' » ?'))return;
+  radios.splice(i,1);
+  if(radioIdx>=radios.length)radioIdx=Math.max(0,radios.length-1);
+  saveRadios();renderRadioEditor();
+  if(curView==='dock')renderDock();
+}
+function moveRadio(i,dir){
+  var ni=i+dir;if(ni<0||ni>=radios.length)return;
+  var tmp=radios[i];radios[i]=radios[ni];radios[ni]=tmp;
+  saveRadios();renderRadioEditor();
+}
+function renameRadio(i){
+  var r=radios[i];
+  var name=prompt('Nom de la radio :',r.name||'');
+  if(name===null)return;
+  name=name.trim();if(!name)return;
+  var url=prompt('URL du flux :',r.url||'');
+  if(url===null)return;
+  url=url.trim();if(!url)return;
+  if(!/^https?:\/\//i.test(url)){alert('URL invalide.');return;}
+  var icon=prompt('Emoji (optionnel) :',r.icon||'📻');
+  if(icon===null)icon=r.icon||'📻';
+  icon=icon.trim()||'📻';
+  radios[i]={icon:icon,name:name,url:url};
+  saveRadios();renderRadioEditor();
+  if(curView==='radio'&&radioIdx===i)renderRadio();
+}
+function resetRadios(){
+  if(!confirm('Restaurer la liste de radios par défaut ? Les radios actuelles seront remplacées.'))return;
+  radios=cloneRadios(DEFAULT_RADIOS);
+  radioIdx=0;
+  saveRadios();renderRadioEditor();
+  if(curView==='dock')renderDock();
+}
 
 // ── Touch & Keys ──
 var tx=0;
@@ -801,14 +1245,21 @@ document.addEventListener('keyup',function(e){
     return;
   }
   if(duration>=S.longPress){
-    // Appui long → RETOUR
+    // Appui long → RETOUR (idle → rien, dock → idle, car → dock/idle, radio → idle)
     goBack();
     return;
   }
-  // Appui court :
-  //  - si un scan est déjà en cours → sélectionne l'élément surligné
-  //  - sinon → démarre un scan (option B : un seul geste cohérent)
-  if(scanTmr){
+  // ── Appui court ──
+  // Comportement selon la vue courante :
+  //  · idle  → réveille vers le dock et démarre immédiatement le scan
+  //  · radio → passe à la radio suivante (navigation linéaire)
+  //  · dock/car : si un scan tourne → sélectionne ; sinon → démarre le scan
+  if(curView==='idle'){
+    showView('dock');
+    setTimeout(startScan,30);  // laisse le DOM se rendre avant de scanner
+  }else if(curView==='radio'){
+    nextRadio();
+  }else if(scanTmr){
     scanSelect();
   }else{
     startScan();
@@ -819,7 +1270,8 @@ document.addEventListener('keyup',function(e){
 });
 
 // ── Init ──
-load();showView('dock');
+load();
+showView(S.idleEnabled?'idle':'dock');
 
 // ── Indicateur BLE (heuristique : event reçu < 60s = "actif") ──
 var bleSeen=0;
@@ -828,6 +1280,14 @@ function bleRefresh(){
   var on=(Date.now()-bleSeen)<60000;
   var dd=document.querySelectorAll('.ble-dot');
   for(var i=0;i<dd.length;i++)dd[i].classList.toggle('on',on);
+  // Indicateur sur l'écran de repos
+  var idot=document.getElementById('idleBleDot');
+  var itxt=document.getElementById('idleBleTxt');
+  if(idot&&itxt){
+    if(bleSeen===0){idot.classList.add('off');itxt.textContent='EN ATTENTE';}
+    else if(on){idot.classList.remove('off');itxt.textContent='BLE PRÊT';}
+    else{idot.classList.add('off');itxt.textContent='BLE INACTIF';}
+  }
 }
 setInterval(bleRefresh,5000);
 function bleClick(){
@@ -841,7 +1301,7 @@ function bleClick(){
 // ── PWA : Service Worker (mise à jour silencieuse) ──
 // Le SW fait skipWaiting + clients.claim et met le cache à jour en arrière-plan.
 // Le nouveau code est servi au prochain démarrage de l'app, sans interruption.
-var APP_VERSION='v5.2';
+var APP_VERSION='v6.0';
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').catch(function(err){console.log('SW erreur:',err);});
   // Le message UPDATE_AVAILABLE est ignoré côté UI : silencieux par design.
