@@ -107,15 +107,25 @@
     .btn:active { transform:scale(.94); }
     .btn.big { background:var(--accent); border-color:var(--accent); color:#050510; padding:13px 30px; font-size:.95em; box-shadow:0 4px 20px rgba(56,189,248,.25); }
 
-    /* ── SOS ── */
-    #sosView { background:linear-gradient(180deg,#1a0800,#0d0400); align-items:center; justify-content:center; text-align:center; padding:30px; }
-    .sos-beacon { width:120px; height:120px; border-radius:50%; background:var(--orange); display:flex; align-items:center; justify-content:center; font-size:3.5em; animation:sosPulse 2s ease-in-out infinite; box-shadow:0 0 60px rgba(255,140,0,.4); }
-    @keyframes sosPulse { 0%,100%{transform:scale(1);box-shadow:0 0 40px rgba(255,140,0,.3)} 50%{transform:scale(1.08);box-shadow:0 0 80px rgba(255,140,0,.6)} }
-    .sos-title { font-size:1.8em; font-weight:900; color:var(--orange); margin-top:24px; }
-    .sos-msg { font-size:1.1em; font-weight:700; margin-top:16px; line-height:1.5; background:rgba(255,140,0,.08); border:2px solid rgba(255,140,0,.2); border-radius:16px; padding:16px 20px; }
-    .sos-phone { font-size:1.8em; font-weight:900; color:#fff; margin-top:16px; background:var(--orange); border-radius:16px; padding:14px 28px; text-decoration:none; display:inline-block; box-shadow:0 4px 20px rgba(255,140,0,.3); }
-    .sos-gps { font-size:.75em; color:var(--text2); margin-top:16px; }
-    .sos-cancel { margin-top:24px; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.15); border-radius:14px; padding:12px 24px; color:var(--text); font-family:inherit; font-size:.9em; font-weight:700; cursor:pointer; }
+    /* ── SOS ──
+       Même structure que l'idle, mais sur fond jaune haute visibilité (couleur
+       gilet de sécu / panneau d'attention) lisible en plein soleil. Tous les
+       éléments sont en noir pour un contraste maximal. */
+    #sosView { background:#FFD60A; align-items:center; justify-content:center; padding:40px 30px; text-align:center; gap:18px; color:#0a0a0a; }
+    #sosView .sos-pulse { position:absolute; top:calc(env(safe-area-inset-top) + 18px); right:22px; width:14px; height:14px; border-radius:50%; background:#0a0a0a; animation:sosBlink 1.4s ease-in-out infinite; }
+    @keyframes sosBlink { 0%,100%{opacity:.25;transform:scale(.8);} 50%{opacity:1;transform:scale(1.1);} }
+    #sosView .sos-banner { display:inline-block; padding:5px 18px; border-radius:14px; background:#0a0a0a; color:#FFD60A; font-size:.78em; font-weight:900; letter-spacing:3px; }
+    #sosView .sos-photo { width:120px; height:120px; border-radius:50%; background:#1a1a22; border:3px solid #0a0a0a; display:flex; align-items:center; justify-content:center; font-size:3.5em; overflow:hidden; flex-shrink:0; }
+    #sosView .sos-photo img { width:100%; height:100%; object-fit:cover; display:block; }
+    #sosView .sos-name { font-size:2.1em; font-weight:900; color:#0a0a0a; letter-spacing:-0.03em; margin:0; line-height:1; }
+    #sosView .sos-msg-txt { font-size:1.05em; color:#0a0a0a; font-weight:700; line-height:1.5; max-width:320px; margin:0; }
+    #sosView .sos-divider { width:60%; max-width:200px; height:1px; background:#0a0a0a; opacity:.25; margin:6px 0; }
+    #sosView .sos-contact-label { font-size:.7em; color:#0a0a0a; font-weight:800; letter-spacing:2px; opacity:.7; }
+    #sosView .sos-contact-name { font-size:1.05em; font-weight:800; color:#0a0a0a; }
+    #sosView .sos-phone { display:inline-flex; align-items:center; gap:8px; padding:14px 28px; border-radius:24px; background:#0a0a0a; color:#FFD60A; font-size:1.25em; font-weight:900; text-decoration:none; min-width:200px; justify-content:center; }
+    #sosView .sos-phone:active { transform:scale(.96); }
+    #sosView .sos-cancel { position:absolute; bottom:calc(env(safe-area-inset-bottom) + 18px); left:50%; transform:translateX(-50%); background:rgba(0,0,0,.06); border:1px solid rgba(0,0,0,.3); border-radius:14px; padding:8px 22px; color:#0a0a0a; font-family:inherit; font-size:.78em; font-weight:700; cursor:pointer; opacity:.65; }
+    #sosView .sos-cancel:active { opacity:1; }
 
     .sos-charge { position:fixed; inset:0; z-index:300; background:rgba(5,5,15,.95); display:none; align-items:center; justify-content:center; flex-direction:column; text-align:center; }
     .sos-charge.on { display:flex; }
@@ -257,17 +267,19 @@
 <audio id="radioAudio" preload="none"></audio>
 
 <!-- IDLE (écran de repos) -->
-<div class="view" id="idleView">
-  <button class="gear-btn" onclick="openOv()" style="position:absolute;top:calc(env(safe-area-inset-top) + 10px);right:14px;opacity:.45">⚙️</button>
+<!-- Tap sur le fond = réveil (bascule sur dock + démarre le scan). Les boutons
+     enfants (gear, téléphone) appellent stopPropagation pour ne pas réveiller. -->
+<div class="view" id="idleView" onclick="wakeUp()">
+  <button class="gear-btn" onclick="event.stopPropagation();openOv()" style="position:absolute;top:calc(env(safe-area-inset-top) + 10px);right:14px;opacity:.45">⚙️</button>
   <div class="idle-photo" id="idlePhoto">👤</div>
   <h1 class="idle-name" id="idleName">QuickSpeak</h1>
   <p class="idle-msg" id="idleMsg">Je communique avec ce téléphone.<br>Appuyez sur le bouton bleu pour engager la conversation.</p>
   <div class="idle-divider" id="idleDivider"></div>
   <div class="idle-contact-label" id="idleContactLbl">CONTACT D'URGENCE</div>
   <div class="idle-contact-name" id="idleContactName"></div>
-  <a class="idle-phone" id="idlePhoneLink" href="#"><span id="idlePhoneTxt"></span></a>
+  <a class="idle-phone" id="idlePhoneLink" href="#" onclick="event.stopPropagation()"><span id="idlePhoneTxt"></span></a>
   <div class="idle-ble"><span class="idle-ble-dot" id="idleBleDot"></span><span class="idle-ble-txt" id="idleBleTxt">BLE PRÊT</span></div>
-  <div class="idle-hint">Appui court sur le bouton : démarrer le scan</div>
+  <div class="idle-hint">Touchez l'écran ou appuyez sur le bouton pour démarrer le scan</div>
 </div>
 
 <!-- DOCK -->
@@ -341,14 +353,20 @@
   </div>
 </div>
 
-<!-- SOS -->
+<!-- SOS — même structure visuelle que l'idle, juste un fond jaune haute visibilité.
+     Pensé pour le passant : photo + prénom humanisent, message clair invite à
+     l'action, numéro tappable en gros bouton noir. -->
 <div class="view" id="sosView">
-  <div class="sos-beacon">🆘</div>
-  <div class="sos-title">BESOIN D'AIDE</div>
-  <div class="sos-msg" id="sosMsg">Bonjour, j'ai besoin d'aide.<br>Merci d'appeler le numéro ci-dessous.</div>
-  <a class="sos-phone" id="sosLink" href="tel:112"><span id="sosNum">112</span></a>
-  <div class="sos-gps" id="sosGps">Recherche GPS...</div>
-  <button class="sos-cancel" onclick="endSOS()">✕ Annuler l'alerte</button>
+  <span class="sos-pulse" aria-hidden="true"></span>
+  <span class="sos-banner">BESOIN D'AIDE</span>
+  <div class="sos-photo" id="sosPhoto">👤</div>
+  <h1 class="sos-name" id="sosName">QuickSpeak</h1>
+  <p class="sos-msg-txt" id="sosMsg">Bonjour, j'ai besoin d'assistance.<br>Merci d'appeler le contact ci-dessous.</p>
+  <div class="sos-divider"></div>
+  <div class="sos-contact-label">CONTACT</div>
+  <div class="sos-contact-name" id="sosContactName"></div>
+  <a class="sos-phone" id="sosLink" href="tel:112">📞 <span id="sosNum">112</span></a>
+  <button class="sos-cancel" onclick="endSOS()">✕ Annuler</button>
 </div>
 
 <!-- SETTINGS -->
@@ -482,7 +500,7 @@ var CAT_ICONS={"Basique":"💬","Besoins":"🫶","Social":"😊","Déplacement":
 var phrases,cats,radios,ci=0,idx=0,radioIdx=0,busy=false,curView='idle',scanTmr=null,scanIdx=0,sosOn=false,sosVTmr=null,ovOpen=false;
 var S={
   scanSpeed:2000,pauseAfter:3000,
-  sosName:'',sosPhone:'',sosMsg:'Bonjour, j\'ai besoin d\'aide.\nMerci d\'appeler le numéro ci-dessous.',sosDur:3000,sosVoice:true,sosSms:true,
+  sosName:'',sosPhone:'',sosMsg:'Bonjour, j\'ai besoin d\'assistance.\nMerci d\'appeler le contact ci-dessous.',sosDur:3000,sosVoice:true,sosSms:true,
   longPress:800,sosPress:3000,backMode:'parent',sosTrigger:'off',sosGraceMs:5000,debounceMs:300,scanMaxCycles:3,showScanBar:false,
   // Profil & écran de repos
   userName:'',userPhoto:'',idleEnabled:true,idleShowContact:true,
@@ -533,9 +551,15 @@ function saveRadios(){try{localStorage.setItem('qs_radios',JSON.stringify(radios
 function filtered(){var r=[];for(var i=0;i<phrases.length;i++)if(phrases[i].cat===cats[ci])r.push(phrases[i]);return r;}
 
 // ── Views ──
+// showView est l'unique point d'entrée pour changer de vue. Il :
+//  · arrête tout scan en cours
+//  · stoppe la radio si on quitte la vue radio
+//  · bascule la classe .active
+//  · rend le contenu de la vue
+//  · auto-démarre le scan dans dock/car (le scan est continu : on enchaîne la
+//    sélection d'une catégorie avec son carrousel sans intervention)
 function showView(name){
   stopScan();
-  // Quitte la radio dès qu'on change de vue (sauf si c'est radio→radio, géré ailleurs)
   if(curView==='radio'&&name!=='radio')stopRadio();
   var vv=document.querySelectorAll('.view');for(var i=0;i<vv.length;i++)vv[i].classList.remove('active');
   document.getElementById(name+'View').classList.add('active');
@@ -544,6 +568,18 @@ function showView(name){
   if(name==='car')renderCar();
   if(name==='idle')renderIdle();
   if(name==='radio')renderRadio();
+  // Le scan reprend automatiquement dans les vues "scannables", après un court
+  // délai pour laisser le DOM se peindre (sinon scanIdx se base sur des
+  // querySelectorAll vides). On vérifie ovOpen pour ne pas relancer le scan
+  // pendant que l'utilisateur configure les réglages.
+  if((name==='dock'||name==='car')&&!ovOpen){
+    setTimeout(function(){if(curView===name&&!ovOpen)startScan();},80);
+  }
+}
+// Réveil depuis l'écran de repos : déclenché par tap écran OU par appui court BLE
+function wakeUp(){
+  if(curView!=='idle')return;
+  showView('dock');  // showView démarrera le scan automatiquement
 }
 // Retour à l'écran de repos (ou dock si idle désactivé)
 function goIdle(){ci=0;idx=0;showView(S.idleEnabled?'idle':'dock');}
@@ -824,35 +860,56 @@ function startSOSCharge(){
 function cancelSOSCharge(){if(!sosCharging)return;sosCharging=false;clearTimeout(sosChTmr);document.getElementById('sosCharge').classList.remove('on');document.getElementById('sosRingFill').classList.remove('spin');}
 function fireSOS(){
   sosOn=true;stopScan();
-  var msg=S.sosMsg||'Bonjour, j\'ai besoin d\'aide.';
+  var msg=S.sosMsg||'Bonjour, j\'ai besoin d\'assistance. Merci d\'appeler le contact ci-dessous.';
   var phone=S.sosPhone||'112';
+  // Photo et prénom (mêmes valeurs que l'idle pour cohérence)
+  var ph=document.getElementById('sosPhoto');
+  if(ph){
+    if(S.userPhoto){ph.innerHTML='<img src="'+S.userPhoto+'" alt="">';}
+    else{ph.textContent='👤';}
+  }
+  var nm=document.getElementById('sosName');
+  if(nm)nm.textContent=S.userName||'Cette personne';
+  // Message d'instruction au passant
   document.getElementById('sosMsg').innerHTML=msg.replace(/\n/g,'<br>');
+  // Contact
+  var cnm=document.getElementById('sosContactName');
+  if(cnm){cnm.textContent=S.sosName||'';cnm.style.display=S.sosName?'':'none';}
   document.getElementById('sosNum').textContent=phone;
   document.getElementById('sosLink').href='tel:'+phone.replace(/\s/g,'');
   showView('sos');
-  if(navigator.geolocation){
+  // GPS : envoyé en SMS au contact, plus affiché à l'écran (info inutile pour le passant)
+  if(navigator.geolocation&&S.sosSms&&S.sosPhone){
     navigator.geolocation.getCurrentPosition(function(pos){
       var lat=pos.coords.latitude.toFixed(5),lon=pos.coords.longitude.toFixed(5);
-      document.getElementById('sosGps').innerHTML='📍 '+lat+', '+lon+'<br><a href="https://maps.google.com/?q='+lat+','+lon+'" style="color:var(--orange)" target="_blank">Ouvrir Maps</a>';
-      if(S.sosSms&&S.sosPhone){
-        var body=encodeURIComponent('🆘 ALERTE QuickSpeak'+(S.sosName?' — '+S.sosName:'')+'!\nPosition: https://maps.google.com/?q='+lat+','+lon);
-        var a=document.createElement('a');a.href='sms:'+S.sosPhone.replace(/\s/g,'')+'&body='+body;a.click();
-      }
-    },function(){document.getElementById('sosGps').textContent='📍 GPS indisponible';},{enableHighAccuracy:true,timeout:10000});
+      var body=encodeURIComponent('🆘 ALERTE QuickSpeak'+(S.userName?' — '+S.userName:S.sosName?' — '+S.sosName:'')+'\nPosition: https://maps.google.com/?q='+lat+','+lon);
+      var a=document.createElement('a');a.href='sms:'+S.sosPhone.replace(/\s/g,'')+'&body='+body;a.click();
+    },function(){},{enableHighAccuracy:true,timeout:10000});
   }
   if(S.sosVoice)sosVoiceLoop(msg,phone);
 }
+// Voix d'instruction calme à destination des passants. Volume au max,
+// rythme posé, prononciation chiffre par chiffre du téléphone pour qu'il soit
+// captable même sans regarder l'écran.
+function spellPhone(p){
+  // "06 12 34 56 78" → "zéro six, un deux, trois quatre, ..." (Web Speech FR
+  // prononce mieux quand on espace les chiffres avec des virgules)
+  var digits=String(p||'').replace(/\D/g,'').split('');
+  return digits.join(' ');
+}
 function sosVoiceLoop(msg,phone){
   if(!sosOn)return;
-  var u=new SpeechSynthesisUtterance(msg.replace(/\n/g,'. ')+'. Appelez le '+phone);
-  u.lang='fr-FR';u.rate=0.8;
+  var who=S.userName?S.userName+' a besoin d\'aide. ':'';
+  var spoken=who+msg.replace(/\n/g,'. ')+'. Appelez le '+spellPhone(phone)+'.';
+  var u=new SpeechSynthesisUtterance(spoken);
+  u.lang='fr-FR';u.rate=0.85;u.volume=1.0;
   var v=speechSynthesis.getVoices(),fr=null;
   for(var i=0;i<v.length;i++){if(v[i].lang.indexOf('fr')===0){if(v[i].localService){fr=v[i];break;}if(!fr)fr=v[i];}}
   if(fr)u.voice=fr;
-  u.onend=function(){sosVTmr=setTimeout(function(){sosVoiceLoop(msg,phone);},4000);};
+  u.onend=function(){sosVTmr=setTimeout(function(){sosVoiceLoop(msg,phone);},3000);};
   speechSynthesis.cancel();speechSynthesis.speak(u);
 }
-function endSOS(){sosOn=false;speechSynthesis.cancel();clearTimeout(sosVTmr);showView('dock');}
+function endSOS(){sosOn=false;speechSynthesis.cancel();clearTimeout(sosVTmr);showView(S.idleEnabled?'idle':'dock');}
 
 // ── (WebSocket supprimé — contrôle 100% BLE HID) ──
 
@@ -1123,11 +1180,16 @@ var btnDown=false;
 var btnDownTime=0;
 var sosTmr=null;
 var backFbTmr=null;
+var sosChargeStartTmr=null; // démarre la spinner SOS juste avant déclenchement
 var sosGraceUntil=0;
 var clickCount=0;
 var clickTmr=null;
 var CLICK_WINDOW=400;
 var lastKeyUpTime=0; // pour anti-rebond (tremblements)
+// Fenêtre d'affichage de la charge SOS : la spinner orange n'apparaît qu'à
+// la toute fin (juste avant le déclenchement) pour ne pas polluer
+// visuellement les appuis longs "normaux" qui font juste un retour.
+var SOS_CHARGE_WINDOW=900;
 
 function clearBtnFeedback(){
   document.body.style.outline='none';
@@ -1135,6 +1197,7 @@ function clearBtnFeedback(){
   cancelSOSCharge();
   clearTimeout(backFbTmr);backFbTmr=null;
   clearTimeout(sosTmr);sosTmr=null;
+  clearTimeout(sosChargeStartTmr);sosChargeStartTmr=null;
 }
 function sosCountTarget(){
   return S.sosTrigger==='dbl'?2:S.sosTrigger==='tpl'?3:S.sosTrigger==='quad'?4:0;
@@ -1178,22 +1241,33 @@ document.addEventListener('keydown',function(e){
     document.body.style.outline='3px solid var(--accent)';
     document.body.style.outlineOffset='-3px';
 
-    // À T1 : passe en orange (= RETOUR si on relâche maintenant).
-    // La charge SOS visuelle ne s'affiche QUE si le mode SOS est 'long'.
+    // À T1 (longPress) : passe en orange (= RETOUR si on relâche maintenant).
+    // L'overlay de charge SOS n'apparaît PAS encore — on laisse l'utilisateur
+    // faire un retour normal sans pollution visuelle.
     backFbTmr=setTimeout(function(){
       if(!btnDown)return;
       document.body.style.outline='3px solid var(--orange)';
-      if(S.sosTrigger==='long'){
-        var remaining=Math.max(300,S.sosPress-S.longPress);
+    },S.longPress);
+
+    // À T2 (sosPress - SOS_CHARGE_WINDOW) : la charge SOS visuelle s'affiche
+    // SEULEMENT si le mode SOS est 'long', pour avertir qu'on est dans la
+    // dernière seconde avant déclenchement. Si la fenêtre est plus courte
+    // que SOS_CHARGE_WINDOW (cas où sosPress-longPress < 900ms), on
+    // affiche la charge dès longPress avec une durée raccourcie.
+    if(S.sosTrigger==='long'){
+      var window=Math.min(SOS_CHARGE_WINDOW,Math.max(300,S.sosPress-S.longPress));
+      var startDelay=Math.max(S.longPress,S.sosPress-window);
+      sosChargeStartTmr=setTimeout(function(){
+        if(!btnDown)return;
         var ring=document.getElementById('sosRingFill');
         document.getElementById('sosCharge').classList.add('on');
         ring.classList.remove('spin');
-        ring.style.setProperty('--dur',remaining+'ms');
+        ring.style.setProperty('--dur',window+'ms');
         void ring.offsetWidth;
         ring.classList.add('spin');
         sosCharging=true;
-      }
-    },S.longPress);
+      },startDelay);
+    }
 
     // À T2 : déclenchement SOS SEULEMENT si trigger = 'long'.
     if(S.sosTrigger==='long'){
@@ -1251,12 +1325,11 @@ document.addEventListener('keyup',function(e){
   }
   // ── Appui court ──
   // Comportement selon la vue courante :
-  //  · idle  → réveille vers le dock et démarre immédiatement le scan
+  //  · idle  → réveille (showView démarrera le scan tout seul)
   //  · radio → passe à la radio suivante (navigation linéaire)
-  //  · dock/car : si un scan tourne → sélectionne ; sinon → démarre le scan
+  //  · dock/car : si un scan tourne → sélectionne ; sinon → (re)démarre
   if(curView==='idle'){
-    showView('dock');
-    setTimeout(startScan,30);  // laisse le DOM se rendre avant de scanner
+    wakeUp();
   }else if(curView==='radio'){
     nextRadio();
   }else if(scanTmr){
@@ -1301,7 +1374,7 @@ function bleClick(){
 // ── PWA : Service Worker (mise à jour silencieuse) ──
 // Le SW fait skipWaiting + clients.claim et met le cache à jour en arrière-plan.
 // Le nouveau code est servi au prochain démarrage de l'app, sans interruption.
-var APP_VERSION='v6.0';
+var APP_VERSION='v6.1';
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').catch(function(err){console.log('SW erreur:',err);});
   // Le message UPDATE_AVAILABLE est ignoré côté UI : silencieux par design.
